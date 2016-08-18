@@ -1,0 +1,26 @@
+table
+  width 100%;
+  margin-bottom 15px;
+  &, /th
+    table-layout auto;
+    &, /td
+      border 1px solid;
+      border-collapse collapse;
+      vertical-align top;
+      border-color #D7D7D7;
+
+td
+  border-width 0 1px;
+  &, /th
+    padding 5px 8px;
+
+th
+  color #FFFFFF;
+  background-color #373737;
+
+tr
+  color inherit;
+  background-color #FBFBFB;
+  &:nth-child(even)
+    color inherit;
+    background-color #F7F7F7;

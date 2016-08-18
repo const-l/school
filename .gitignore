@@ -1,0 +1,12 @@
+node_modules/
+libs/
+.idea/
+
+server/session.js
+db/data.json
+public/index.min.*
+
+# bem
+.enb/tmp/
+*.bundles*/*/*.*
+!*.bundles*/*/*.bemdecl.js

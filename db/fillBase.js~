@@ -1,0 +1,64 @@
+var mongoose = require('mongoose'),
+    schemas  = require('./mongoose'),
+    config   = require('../server/config'),
+    utils    = require('../server/utils')({}),
+
+    connect = function (defer) {
+        mongoose.connection.on('open', function() {
+            defer.resolve();
+        });
+    },
+    dropDB = function (defer) {
+        mongoose.connection.db.dropDatabase(function(err) {
+            err?
+                defer.reject(err):
+                defer.resolve();
+        });
+    },
+    createData = function (defer) {
+        var dataSchemas = [];
+        utils.forEach(config.mongoose.data, function (item, name) {
+            dataSchemas.push(function (defer) {
+                var schemaData = [];
+                utils.forEach(item, function (data) {
+                    schemaData.push(function (defer) {
+                        (new schemas[name](data))
+                            .save(function (err) {
+                                err? defer.reject(err): defer.resolve();
+                            });
+                    });
+                }, this);
+                utils.chain(schemaData, this)
+                    .then(
+                        function(res) { defer.resolve(res); },
+                        function(err) { defer.reject(err) },
+                        function(state) { defer.notify(state) });
+            });
+        });
+        utils.chain(dataSchemas, this)
+            .then(
+                function(res) { defer.resolve(res); },
+                function(err) { defer.reject(err) },
+                function(state) { defer.notify(state) });
+    },
+
+    createDB = function () {
+        utils
+            .chain([
+                connect,
+                dropDB,
+                createData
+            ], this)
+            .then(
+                function () {
+                    mongoose.disconnect();
+                },
+                function (error) {
+                    console.error(error);
+                    mongoose.disconnect();
+                }
+            );
+    };
+
+createDB();
+

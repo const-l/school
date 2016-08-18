@@ -1,0 +1,43 @@
+{
+  "name": "School",
+  "description": "BEM project",
+  "version": "0.0.0",
+  "author": {
+    "name": "Constantine Lopatin",
+    "email": "k.n.lopatin@gmail.com"
+  },
+  "repository": {},
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "express": "^4.13.4",
+    "express-session": "^1.13.0",
+    "body-parser": "^1.15.0",
+    "connect-slashes": "^1.3.1",
+    "cookie-parser": "^1.4.1",
+    "serve-favicon": "^2.3.0",
+    "serve-static": "^1.10.2",
+    "mongoose": "^4.4.4"
+  },
+  "devDependencies": {
+    "bower": "^1.7.9",
+    "enb": "^1.3.0",
+    "enb-bem-techs": "^2.2.1",
+    "enb-borschik": "^2.4.0",
+    "borschik-tech-cleancss": "^2.1.0",
+    "enb-bemxjst": "^6.4.0",
+    "enb-diverse-js": "^0.1.0",
+    "enb-modules": "^0.2.0",
+    "enb-stylus": "^2.3.2",
+    "ym": "^0.1.0",
+    "borschik": "^1.6.0"
+  },
+  "scripts": {
+    "start": "enb server",
+    "postinstall": "npm run deps",
+    "deps": "bower install",
+    "postinstall": "npm run deps"
+  },
+  "private": true
+}

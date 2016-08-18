@@ -1,0 +1,31 @@
+.link
+  color #7EB347;
+  outline none;
+  text-decoration none;
+  &_type
+    &_logo
+      margin 0;
+      padding 0;
+      font-size 32px;
+      font-variant small-caps;
+    &_nav
+      display inline-block;
+      padding 30px 20px;
+      color inherit;
+      transition all 0.3s ease-in-out;
+      &.link_hovered
+        background-color #7EB347;
+    &_sidebar
+      display block;
+      position relative;
+      margin 0;
+      padding 5px 10px 5px 15px;
+      text-decoration none;
+      border solid;
+      border-width 0 0 1px 0;
+      border-color #D7D7D7;
+      color inherit;
+      &.link_hovered
+        color #7EB347
+      &::before
+        content "‣ ";
