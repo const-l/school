@@ -14,8 +14,7 @@ module.exports = exports = function Menu(mongoose) {
         Route   : { type : Schema.Types.ObjectId, ref : 'Route'/*, required : true*/ },
         Position: { type : Number, required : true, default : 0 },
         Parent  : { type : Schema.Types.ObjectId, ref : 'Menu' }
-    })/*,
-        cache = {}*/;
+    });
 
     /**
      * Указываем для новых записей последнюю позицию относительно родителя
@@ -105,7 +104,6 @@ module.exports = exports = function Menu(mongoose) {
             .exec(function (err, docs) {
                 if (err) return next(err);
                 if (docs && docs.length) {
-                    //cache[type] = docs.reduce(function (prev, curr) {
                     cache.set(type, docs.reduce(function (prev, curr) {
                         var place = curr.Parent? getParent(curr, docs, prev): prev;
                         if (place) {
@@ -113,10 +111,8 @@ module.exports = exports = function Menu(mongoose) {
                             curr.Route && (place[curr.Position].path = curr.Route.Path);
                         }
                         return prev;
-                    //}, []);
                     }, []));
                 }
-                // else cache[type] = [];
                 else cache.set(type, []);
                 next();
             });
@@ -129,14 +125,12 @@ module.exports = exports = function Menu(mongoose) {
      * @private
      */
     function getByType(type, next) {
-        //if (cache[type]) next.resolve? next.resolve(cache[type]): next(cache[type]);
         if (cache.exists(type)) next.resolve? next.resolve(cache.get(type)): next(cache.get(type));
         else buildByType.call(this, type, function (err) {
             if (err) {
                 if (next.reject) next.reject(err);
                 else throw err;
             }
-            // else next.resolve? next.resolve(cache[type]): next(cache[type]);
             else next.resolve? next.resolve(cache.get(type)): next(cache.get(type));
         });
     }

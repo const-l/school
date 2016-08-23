@@ -4,7 +4,6 @@
  */
 module.exports = exports = function Route(mongoose) {
 
-    // var Schema = mongoose.Schema;
     var Schema = mongoose.Schema,
         cache = require('../../server/cache')();
 
@@ -14,12 +13,9 @@ module.exports = exports = function Route(mongoose) {
             Block   : { type : String, required : true },
             Type    : { type : String, required : true, enum : ['Page', 'List'], default : 'Page' },
             Pages   : [{ type : Schema.Types.ObjectId, ref : 'Page' }]
-        // }),
-        // cache = null;
         });
 
     Route.statics.GetRoutes = function (next) {
-        // if (cache) next.resolve? next.resolve(cache): next(cache);
         if (cache.exists('Route')) next.resolve? next.resolve(cache.get('Route')): next(cache.get('Route'));
         else this.find({}, function (err, docs) {
             var result = {};

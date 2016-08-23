@@ -4,6 +4,5 @@ block('nav')(
             { block : 'clear' }
     ]),
     match(function() { return !this.inNav; })
-        (function() { return applyNext({ inNav : true }); })/*,
-    js()(true)*/
+        (function() { return applyNext({ inNav : true }); })
 );

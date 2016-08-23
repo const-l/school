@@ -8,50 +8,7 @@ var express = require('express'),
 
     cache = require('./cache')(),
     
-    schemas = require('../db/schemas')/*,
-
-    env = process.env.NODE_ENV,
-    isDev = env === 'development',
-    useCache = !isDev,
-
-    navigation = {}*/;
-
-/*
-router.all('*', function (req, res, next) {
-    var ignoreCache = req.ignoreCache,
-        navigation = config.settings.navigation;
-    if (ignoreCache || !navigation) {
-        mongoose.Navigation.all(function (err, data) {
-            if (err) {
-                console.error(err);
-                return res.send(500);
-            }
-            config.settings.navigation = data;
-            next();
-        })
-    }
-    else next();
-});
-
-router.get('/', function (req, res) {
-    render(req, res, {
-        /!*main: 'This text in main in home page'*!/
-        main : [{
-            caption : 'Welcome!',
-            data : 'This text in main in home page'
-        }]
-    })
-});
-
-router.get('/page/:path', function (req, res, next) {
-    var url = (req.params && req.params.path || '').replace(/\/+$/, ''), found, data, nav = config.settings.navigation;
-    if (!url) return next();
-    found = utils.findOne(nav, function (item) { return item.path === '/' + url; }, this);
-    found && (data = found.article.length? found.article: [{ data : 'Этот раздел пока пуст' }]);
-    if (!data) return next();
-    render(req, res, { main : data });
-});
-*/
+    schemas = require('../db/schemas');
 
 function getRequiredData() {
     return vow.all([
@@ -69,10 +26,26 @@ router.get('*', function (req, res, next) {
 });
 
 router.get('*', function (req, res, next) {
-    if (cache.get('Route')[req.path]) {
-        render(req, res, {
-            Menus : cache.get('Menu'),
-            Sidebars : cache.get('Sidebar')
+    var route = (cache.get('Route') || {})[req.path];
+    if (route) {
+        schemas.Page.find({_id : {$in : route.Pages}}, function (err, docs) {
+            if (err) return next(err);
+            if (docs && docs.length) {
+                render(req, res, {
+                    Menus : cache.get('Menu'),
+                    Sidebars : cache.get('Sidebar'),
+                    main : docs.map(function(item) {
+                        var result = {
+                            caption : item.Caption,
+                            content : item.Preview
+                        };
+                        docs.length == 1 && (result.content = item.Content);
+                        return result;
+                    })
+                });
+            }
+            //TODO: обработать пустые страницы
+            else next();
         });
     }
     else next();

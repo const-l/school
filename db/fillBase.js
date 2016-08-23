@@ -4,7 +4,7 @@ var mongoose = require('mongoose'),
     utils    = require('../server/utils')({}),
     dbHelper = require('../server/utils/dbHelper')(schemas);
 
-var connect = function (defer, res) {
+var connect = function (defer) {
         mongoose.connection.readyState === mongoose.STATES.connected?
             defer.resolve():
             mongoose.connection.on('open', function () { defer.resolve(); });
