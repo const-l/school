@@ -1,6 +1,7 @@
 ({
     shouldDeps : [
         { block : 'sidebar' },
-        { block : 'data' }
+        { block : 'data' },
+        { block : 'empty' }
     ]
 })

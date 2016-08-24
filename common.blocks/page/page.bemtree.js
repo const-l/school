@@ -15,7 +15,8 @@ block('page')(
                         block: 'header'
                     },
                     {
-                        block: 'main'
+                        block: 'main',
+                        main_content: this.ctx.main_content
                     },
                     {
                         block: 'footer'

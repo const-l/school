@@ -51,4 +51,13 @@ router.get('*', function (req, res, next) {
     else next();
 });
 
+router.all('*', function (req, res) {
+    res.status(404);
+    render(req, res, { Menus : cache.get('Menu') }, {
+        block: 'page',
+        title: 'Страница не найдена',
+        main_content : { block: 'empty' }
+    });
+});
+
 module.exports = router;
