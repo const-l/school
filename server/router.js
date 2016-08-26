@@ -25,6 +25,28 @@ router.get('*', function (req, res, next) {
     );
 });
 
+router.post('/login', function (req, res) {
+    utils.async(function (defer) {
+        schemas.User.getAuthUser(req.body, defer);
+    }).then(
+        function (result) {
+            var data = { success : false };
+            if (result) {
+                req.session.user = {
+                    Name : result.Name,
+                    IsAdmin: result.IsAdmin
+                };
+                data.success = true;
+            }
+            res.send(JSON.stringify(data));
+        }
+    );
+});
+
+router.post('/logout', function (req, res) {
+    res.send(JSON.stringify({ success: (delete req.session.user )}));
+});
+
 router.get('*', function (req, res, next) {
     var route = (cache.get('Route') || {})[req.path];
     if (route) {
@@ -53,10 +75,10 @@ router.get('*', function (req, res, next) {
 
 router.all('*', function (req, res) {
     res.status(404);
-    render(req, res, { Menus : cache.get('Menu') }, {
-        block: 'page',
+    render(req, res, {
+        Menus : cache.get('Menu'),
         title: 'Страница не найдена',
-        main_content : { block: 'empty' }
+        'main-content' : { block: 'empty' }
     });
 });
 

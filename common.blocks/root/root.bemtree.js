@@ -1,8 +1,10 @@
 block('root')(
     def()(function () {
-        var ctx = this.ctx,
-            data = this.data = ctx.data;
-        if (ctx.context) return applyCtx(ctx.context);
-        return applyCtx({ block: 'page', title: 'Пшеничненская СОШ' });
+        /* Пробрасываем данные во все блоки */
+        this.data = this.ctx.data;
+        /* Если есть контекст, то отрисовываем в нем */
+        if (this.ctx.context) return applyCtx(this.ctx.context);
+        /* иначе идем по "общему" пути */
+        return applyCtx({ block: 'page' });
     })
 );

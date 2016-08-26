@@ -1,6 +1,6 @@
 block('header')(
-    content()(
-        [
+    content()(function () {
+        return [
             {
                 block : 'topbar'
             },
@@ -11,5 +11,5 @@ block('header')(
                 block : 'nav'
             }
         ]
-    )
+    })
 );

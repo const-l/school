@@ -3,7 +3,7 @@ block('page')(
         return local({ _pageInited : true })(function () {
             return applyCtx({
                 block: this.block,
-                title: this.ctx.title,
+                title: this.data.title || 'Пшеничненская СОШ',
                 styles: [
                     { elem: 'css', url: this.data.settings.baseUrl + 'index.min.css' }
                 ],
@@ -15,8 +15,7 @@ block('page')(
                         block: 'header'
                     },
                     {
-                        block: 'main',
-                        main_content: this.ctx.main_content
+                        block: 'main'
                     },
                     {
                         block: 'footer'

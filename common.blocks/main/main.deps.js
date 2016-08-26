@@ -2,6 +2,7 @@
     shouldDeps : [
         { block : 'sidebar' },
         { block : 'data' },
-        { block : 'empty' }
+        { block : 'empty' },
+        { block : 'login' }
     ]
 })

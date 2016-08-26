@@ -1,12 +1,23 @@
 block('topbar')(
-    def().match(function () { return !this._wrapped; })(function() {
-        return local({ _wrapped : true })(function() {
-            return applyCtx({ block: 'wrapper', mods : { color : 'green' }, content: this.ctx });
-        });
+    wrap()(function () {
+        return { block: 'wrapper', mods : { color : 'green' }, content: this.ctx };
     }),
     content()(function () {
-        var contentLeft = this.ctx.left || [{ url : 'https://ya.ru', content : 'Yandex' }, { url : 'google.com', content : 'Google' }],
+        var contentLeft = this.ctx.left || [],
             contentRight = this.ctx.right || [];
+        !Array.isArray(contentRight) && (contentRight = [contentRight]);
+        this.data.user?
+            contentRight.push({ elem: 'logout' }):
+            contentRight.push(
+                { elem : 'login' },
+                {
+                    block : 'modal',
+                    mods: {
+                        theme: 'islands',
+                        autoclosable : true
+                    },
+                    content: { block : 'login' }
+                });
         return applyCtx([
             {
                 elem : 'left',
@@ -25,6 +36,17 @@ block('topbar')(
                 result.push({ block : 'link', url : item.url, content : item.content, target : '_blank' });
             });
             return applyCtx(result);
+        })
+    ),
+    elem('login')(
+        content()({ block : 'link', mods: { pseudo: 'true' }, content: 'Войти' })
+    ),
+    elem('logout')(
+        content()(function () {
+            return [
+                this.data.user.Name + " | ",
+                { block : 'link', mods: { pseudo: 'true' }, content: 'Выйти' }
+            ]
         })
     )
 );

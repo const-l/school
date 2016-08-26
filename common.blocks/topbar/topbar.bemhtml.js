@@ -1,4 +1,5 @@
 block('topbar')(
+    js()(true),
     mix()([
         {
             block : 'page',

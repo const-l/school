@@ -5,7 +5,8 @@
 module.exports = exports = function User(mongoose) {
 
     var Schema = mongoose.Schema,
-        crypto = require('crypto');
+        crypto = require('crypto'),
+        cache = require('../../server/cache')();
 
 
     var User = new Schema({
@@ -36,6 +37,22 @@ module.exports = exports = function User(mongoose) {
      */
     User.methods.checkPassword = function (password) {
         return this.encryptPassword(password) === this.HashedPassword;
+    };
+
+    User.statics.getAuthUser = function (user, next) {
+        //TODO: проверка на пустоту user'a
+        var key = 'user_' + user.login + "_" + user.password;
+        if (cache.exists(key)) next.resolve? next.resolve(cache.get(key)): next(cache.get(key));
+        else {
+            this.findOne({ Login : user.login }, function (err, doc) {
+                if (err) {
+                    if (next.reject) next.reject(err);
+                    else throw err;
+                }
+                doc && doc.checkPassword(user.password) && cache.set(key, doc);
+                next.resolve? next.resolve(cache.get(key)): next(cache.get(key));
+            });
+        }
     };
 
     return mongoose.model('User', User);
