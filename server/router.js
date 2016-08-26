@@ -50,19 +50,14 @@ router.post('/logout', function (req, res) {
 router.get('*', function (req, res, next) {
     var route = (cache.get('Route') || {})[req.path];
     if (route) {
-        schemas.Page.find({_id : {$in : route.Pages}}, function (err, docs) {
+        schemas.Page.find({_id : {$in : route.Pages}}, 'Content', function (err, docs) {
             if (err) return next(err);
             if (docs && docs.length) {
                 render(req, res, {
                     Menus : cache.get('Menu'),
                     Sidebars : cache.get('Sidebar'),
                     main : docs.map(function(item) {
-                        var result = {
-                            caption : item.Caption,
-                            content : item.Preview
-                        };
-                        docs.length == 1 && (result.content = item.Content);
-                        return result;
+                        return Object.assign({ block : route.Block }, JSON.parse(item.Content || '[]'));
                     })
                 });
             }

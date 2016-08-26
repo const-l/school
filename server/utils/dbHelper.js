@@ -54,7 +54,7 @@ module.exports = exports = function (schemas) {
                 function(err) { defer.reject(err) }
             );
         });
-    };
+    }
     /**
      * Чтение данных из БД и сохранение их в файл
      * @param {vow.defer} defer
@@ -91,7 +91,7 @@ module.exports = exports = function (schemas) {
             },
             function (err) { defer.reject(err); }
         );
-    };
+    }
 
     return {
         fromFileToDB : _fromFileToDB,

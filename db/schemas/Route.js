@@ -11,7 +11,6 @@ module.exports = exports = function Route(mongoose) {
             Path    : { type : String, required : true },
             Caption : { type : String },
             Block   : { type : String, required : true },
-            Type    : { type : String, required : true, enum : ['Page', 'List'], default : 'Page' },
             Pages   : [{ type : Schema.Types.ObjectId, ref : 'Page' }]
         });
 
