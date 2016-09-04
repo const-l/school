@@ -11,7 +11,7 @@ module.exports = {
         uri : 'mongodb://localhost/school_dev',
 		dataFilePath : './db/data.json'
     },
-    cacheAge: 30 * 60 * 100,
+    cacheAge: 30 * 60 * 1000,
     public: './public',
     settings: {
         baseUrl: 'http://localhost:3000/'

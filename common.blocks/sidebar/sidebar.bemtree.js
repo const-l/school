@@ -12,7 +12,7 @@ block('sidebar')(
                 else {
                     result.block = 'link';
                     result.content = item.caption;
-                    result.active = data.url.path.replace(/\/$/, '') === item.path.replace(/\/$/, '');
+                    result.active = data.url.pathname.replace(/\/$/, '') === item.path.replace(/\/$/, '');
                     item.path && (result.url = item.path);
                 }
                 return result;

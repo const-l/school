@@ -5,7 +5,7 @@ var path = require('path'),
     isDev = env === 'development',
     useCache = !isDev,
 
-    cache = {},
+    cache = require('./cache')(),
     bundles = {};
 
 config.bem.bundles.forEach(function (bundle) {
@@ -20,11 +20,9 @@ function render(req, res, data, context) {
     var query = req.query,
         user = req.session.user,
         cacheKey = req.url + (context? JSON.stringify(context): '') + (user? JSON.stringify(user): ''),
-        cached = cache[cacheKey];
+        cached = cache.get(cacheKey);
     data = data || {};
     data.bundle = data.bundle || 'index';
-
-    /*cached && console.info(cached.html);*/
 
     if (isDev && query.json)
         return res.send(JSON.stringify(data, null, 4));
@@ -62,10 +60,10 @@ function render(req, res, data, context) {
         return res.sendStatus(500);
     }
 
-    useCache && (cache[cacheKey] = {
+    useCache && cache.set(cacheKey, {
         timestamp: new Date(),
         html: html
-    });
+    }, { overwrite : true });
 
     res.send(html);
 }

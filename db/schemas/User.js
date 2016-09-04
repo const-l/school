@@ -38,7 +38,13 @@ module.exports = exports = function User(mongoose) {
     User.methods.checkPassword = function (password) {
         return this.encryptPassword(password) === this.HashedPassword;
     };
-
+    /**
+     * Получить авторизованного пользователя, если такой есть и пароль верный
+     * @param {object} user - хэш пользователя
+     * @param {string} user.login - логин пользователя
+     * @param {string} user.password - пароль пользователя
+     * @param {vow.defer|function} next - callback
+     */
     User.statics.getAuthUser = function (user, next) {
         //TODO: проверка на пустоту user'a
         var key = 'user_' + user.login + "_" + user.password;

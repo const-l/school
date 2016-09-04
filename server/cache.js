@@ -3,10 +3,12 @@
  * @constant
  * @type {{code: number, message: string}}
  */
-const   STOP_ITERATION      = { code: 0x00000, message: 'Stop forEach iterations' },
+const
+    STOP_ITERATION      = { code: 0x00000, message: 'Stop forEach iterations' },
     EMPTY_KEY           = { code: 0x00010, message: 'Key can\'t be empty' },
     WRONG_SET_KEY_TYPE  = { code: 0x00011, message: 'Key datatype can\'t by a array'},
     WRONG_GET_KEY_TYPE  = { code: 0x00012, message: 'Key datatype can\'t by a object' },
+    WRONG_SEARCH_KEY    = { code: 0x00013, message: 'Key must by RegExp or string' },
     EMPTY_DATA          = { code: 0x00020, message: 'Data can\'t be empty. For clear by key use \'flush\' function' },
     UNKNOWN_ERROR       = { code: 0x99999, message: 'Unknown error' };
 
@@ -185,6 +187,23 @@ function Storage(config) {
             Array.isArray(key)?
                 forEach(key, function(item) { result[item] = this.exists(item); }, this):
                 (result = _cache.hasOwnProperty(key));
+            return result;
+        },
+        /**
+         * Поиск всех ключей, удовлетворяющих шаблону
+         * @param {RegExp|string} key - усолвие поиска
+         * @returns {Array.<string>}  - массив ключей, удовлетворяющих условию
+         * @throws {EMPTY_KEY}        - пустой ключ
+         * @throws {WRONG_SEARCH_KEY} - ключ должен быиь строкой или регулярным выражением
+         */
+        find: function (key) {
+            if (key === undefined) throw new CacheError(EMPTY_KEY);
+            key = (typeof key === 'string' || key instanceof String)? new RegExp(key): key;
+            if (!(key instanceof RegExp)) throw new CacheError(WRONG_SEARCH_KEY);
+            var result = [];
+            forEach(_cache, function (item, current) {
+                if (key.test(current)) result.push(current);
+            });
             return result;
         },
         /**
