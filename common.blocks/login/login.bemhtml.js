@@ -51,8 +51,7 @@ block("login")(
             content :
             {
                 block : "button",
-                mods : { theme: 'islands', size: 'm' },
-                attrs : {type : 'submit'},
+                mods : { theme: 'islands', size: 'm', type : 'submit' },
                 text : "Войти"
             }
         }
