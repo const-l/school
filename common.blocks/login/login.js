@@ -5,32 +5,38 @@ modules.define('login', ['i-bem__dom', 'jquery'], function(provide, BEMDOM, $){
             onSetMod : {
                 js : {
                     inited : function () {
-                        var popup = this.findBlockInside('popup').setAnchor(this),
-                            button = this.findBlockInside('submit', 'button'),
-                            login = this.findBlockInside('login', 'input'),
-                            loginPopup = this.findBlockInside('login', 'popup').setAnchor(login),
-                            password = this.findBlockInside('password', 'input'),
-                            passwordPopup = this.findBlockInside('password', 'popup').setAnchor(password);
-
-                        button.on('click', function () {
-                            if (!login._val) loginPopup.toggleMod('visible', true);
-                            else if (!password._val) passwordPopup.toggleMod('visible', true);
-                            else $.ajax({
-                                    type: 'POST',
-                                    cache: false,
-                                    dataType: 'json',
-                                    url: '/login',
-                                    data: {
-                                        login:login._val,
-                                        password:password._val
-                                    },
-                                    success: function (result) {
-                                        result.success? (location = window.location) :popup.setMod('visible', true);
-                                    }.bind(this)
-                                });
-                        });
+                        this.findBlockInside('popup')
+                            .setAnchor(this);
+                        this.findBlockInside('login', 'popup')
+                            .setAnchor(this.findBlockInside('login', 'input'));
+                        this.findBlockInside('password', 'popup')
+                            .setAnchor(this.findBlockInside('password', 'input'));
+                        this.bindTo('submit', this._onSubmit)
                     }
                 }
+            },
+            _onSubmit : function (e) {
+                e.preventDefault();
+                var login = this.findBlockInside('login', 'input').getVal(),
+                    password = this.findBlockInside('password', 'input').getVal();
+                if (!login) return this.findBlockInside('login', 'popup').toggleMod('visible', true);
+                if (!password) return this.findBlockInside('password', 'popup').toggleMod('visible', true);
+                $.ajax({
+                    type: 'POST',
+                    cache: false,
+                    dataType: 'json',
+                    url: '/login',
+                    data: {
+                        login : login,
+                        password : password
+                    },
+                    success: function (result) {
+                        result.success?
+                            (location = window.location):
+                            this.findBlockInside('popup').setMod('visible', true);
+                    },
+                    context : this
+                });
             }
         },
         {
