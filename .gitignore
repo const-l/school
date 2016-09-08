@@ -5,6 +5,7 @@ libs/
 server/session.js
 db/data.json
 public/index.min.*
+public/img/tmp/
 
 # bem
 .enb/tmp/

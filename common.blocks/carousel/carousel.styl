@@ -1,0 +1,30 @@
+.carousel {
+  position: relative;
+  margin-bottom: 20px;
+  line-height: 1;
+
+  &__inner {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  &__item {
+    position: relative;
+    display: none;
+
+    &_state_active {
+      display: block;
+    }
+
+    &_type {
+      &_next,
+      &_prev {
+        display: block;
+        position: absolute;
+        top: 0;
+        width: 100%;
+      }
+    }
+  }
+}
