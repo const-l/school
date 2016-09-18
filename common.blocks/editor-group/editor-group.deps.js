@@ -1,0 +1,6 @@
+({
+    shouldDeps : [
+        'clear',
+        'file'
+    ]
+})

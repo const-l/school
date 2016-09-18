@@ -1,17 +1,21 @@
 modules.define('login', ['i-bem__dom', 'jquery'], function(provide, BEMDOM, $){
 
+    var popup, loginPopup, passwordPopup;
+
     provide(BEMDOM.decl(this.name,
         {
             onSetMod : {
                 js : {
                     inited : function () {
-                        this.findBlockInside('popup')
+                        popup = this.findBlockInside('popup')
                             .setAnchor(this);
-                        this.findBlockInside('login', 'popup')
+                        loginPopup = this.findBlockInside('login', 'popup')
                             .setAnchor(this.findBlockInside('login', 'input'));
-                        this.findBlockInside('password', 'popup')
+                        passwordPopup = this.findBlockInside('password', 'popup')
                             .setAnchor(this.findBlockInside('password', 'input'));
-                        this.bindTo('submit', this._onSubmit)
+                        this.bindTo('submit', this._onSubmit);
+                        this.findBlockInside('login', 'input').bindTo('change', this._onChange);
+                        this.findBlockInside('password', 'input').bindTo('change', this._onChange);
                     }
                 }
             },
@@ -19,8 +23,8 @@ modules.define('login', ['i-bem__dom', 'jquery'], function(provide, BEMDOM, $){
                 e.preventDefault();
                 var login = this.findBlockInside('login', 'input').getVal(),
                     password = this.findBlockInside('password', 'input').getVal();
-                if (!login) return this.findBlockInside('login', 'popup').toggleMod('visible', true);
-                if (!password) return this.findBlockInside('password', 'popup').toggleMod('visible', true);
+                if (!login) return loginPopup.setMod('visible', true);
+                if (!password) return passwordPopup.setMod('visible', true);
                 $.ajax({
                     type: 'POST',
                     cache: false,
@@ -33,10 +37,13 @@ modules.define('login', ['i-bem__dom', 'jquery'], function(provide, BEMDOM, $){
                     success: function (result) {
                         result.success?
                             (location = window.location):
-                            this.findBlockInside('popup').setMod('visible', true);
+                            popup.setMod('visible', true);
                     },
                     context : this
                 });
+            },
+            _onChange : function () {
+                popup.getMod('visible') && popup.setMod('visible', false);
             }
         },
         {

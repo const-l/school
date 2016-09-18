@@ -5,12 +5,35 @@ var express = require('express'),
     url = require('url'),
     utils = require('./utils')({}),
     vow = require('vow'),
-
     cache = require('./cache')(),
-    
-    schemas = require('../db/schemas');
+    schemas = require('../db/schemas'),
+    fs = require('fs'),
+    path = require('path'),
+    multer = require('multer');
 
-///TODO: проработать нормально обработку ошибок, сделать кроме 404 еще минимум 401 и 500
+var storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            var dir = './public/uploads' + req.params[0] + '/';
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+            cb(null, dir);
+        },
+        filename: function (req, file, cb) {
+            cb(null, file.originalname);
+        }
+    }),
+    upload = multer({ storage : storage });
+
+var isAuthUser = function (req, res, next) {
+        (req.session.user || {}).Id?
+            next(): next('route');
+    },
+    isAdminUser = function (req, res, next) {
+        (req.session.user || {}).IsAdmin?
+            next(): next('route');
+    },
+    forbiddenSend = function (req, res) {
+        res.sendStatus(403);
+    };
 
 router.post('/login', function (req, res) {
     utils.async(function (defer) {
@@ -30,12 +53,11 @@ router.post('/login', function (req, res) {
         }
     );
 });
-
 router.post('/logout', function (req, res) {
     res.send(JSON.stringify({ success: (delete req.session.user )}));
 });
 
-router.post('*/save/:id', function (req, res, next) {
+router.post('*/save/:id', isAuthUser, isAdminUser, function (req, res) {
     var user = req.session.user || {},
         body = req.body,
         content = '',
@@ -47,21 +69,56 @@ router.post('*/save/:id', function (req, res, next) {
     catch (e) {
         res.status(500).send('Inner error');
     }
-    if (user.Id && user.IsAdmin) {
-        utils.async(function (defer) {
-            cache.flush(cache.find(path + ".*"));
-            schemas.Page.saveContent(id, content, user, defer);
-        }).then(
-            function () { res.redirect(path); },
-            function (err) {
-                res.status(500).send(err);
-            }
-        );
-    }
-    //TODO: проработать переброс с 403
-    else next();
+    utils.async(function (defer) {
+        cache.flush(cache.find(path + ".*"));
+        schemas.Page.saveContent(id, content, user, defer);
+    }).then(
+        function () { res.redirect(path); },
+        function (err) {
+            res.status(500).send(err);
+        }
+    );
 });
+router.post('*/save/:id', forbiddenSend);
 
+router.post('*/upload', [
+    isAuthUser,
+    isAdminUser,
+    upload.single('file'),
+    function (req, res, next) {
+        cache.flush(cache.find(req.url + '.*'));
+        res.status(200).end();
+    }
+]);
+router.post('*/upload', forbiddenSend);
+
+router.get('*/upload', isAuthUser, isAdminUser, function (req, res, next) {
+    if (!req.xhr) return next();
+    var dir = './public/uploads' + req.params[0] + '/';
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir);
+        render(req, res, { files : [] }, { block : 'file', elem : 'list' });
+    }
+    else {
+        fs.readdir(dir, function (err, files) {
+            if (err) res.sendStatus(500);
+            render(req, res, {
+                    files :
+                        files
+                            .filter(function (file) {
+                                return fs.statSync(path.join(dir, file)).isFile();
+                            })
+                            .map(function (file) {
+                                return '/uploads' + req.params[0] + '/' + file;
+                            })
+                },
+                { block : 'file', elem : 'list' });
+        });
+    }
+});
+router.get('*/upload', forbiddenSend);
+
+///TODO переработать на прослойки, чтобы все роуты обрабатывались однотипно
 router.get('*', function (req, res, next) {
     var isEditMod = !!req.query['edit_mode'],
         queryId = req.query.id || '',

@@ -1,4 +1,14 @@
 block('editor')(
+    wrap()(function () {
+        return {
+            block : 'editor-group',
+            content : [
+                this.ctx,
+                { block : 'clear' },
+                { block : 'file' }
+            ]
+        }
+    }),
     tag()('form'),
     js()(true),
     attrs()(function () { return { action : "save/" + this.ctx.id, method : "post" }; }),

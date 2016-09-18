@@ -6,6 +6,7 @@ server/session.js
 db/data.json
 public/index.min.*
 public/img/tmp/
+public/uploads/
 
 # bem
 .enb/tmp/

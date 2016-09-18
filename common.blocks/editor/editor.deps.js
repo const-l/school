@@ -7,6 +7,7 @@
         { mods : { page: ['article']}}
     ],
     mustDeps: [
-        { block : 'tinymce' }
+        { block : 'tinymce' },
+        'editor-group'
     ]
 })
