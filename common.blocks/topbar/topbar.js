@@ -6,10 +6,10 @@ modules.define('topbar', ['i-bem__dom', 'jquery'], function(provide, BEMDOM, $){
                 js : {
                     inited : function () {
                         var modal = this.findBlockInside('modal'),
-                            elem = this.findElem('login'),
+                            login = this.findBlockInside('login', 'link'),
                             logout = this.findBlockInside('logout', 'link');
 
-                        modal && elem && BEMDOM.blocks.link.on(elem, 'click', function() {
+                        modal && login && login.bindTo('click', function() {
                             modal.setMod('visible', true);
                         });
 

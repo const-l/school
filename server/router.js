@@ -14,8 +14,17 @@ var express = require('express'),
 var storage = multer.diskStorage({
         destination: function (req, file, cb) {
             var dir = './public/uploads' + req.params[0] + '/';
-            if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-            cb(null, dir);
+            fs.stat(dir, function (err) {
+                if (err) {
+                    if (err.code === "ENOENT") {
+                        fs.mkdir(dir, function (err) {
+                            err? cb(err): cb(null, dir);
+                        });
+                    }
+                    else cb(err);
+                }
+                else cb(null, dir);
+            })
         },
         filename: function (req, file, cb) {
             cb(null, file.originalname);
@@ -92,29 +101,50 @@ router.post('*/upload', [
 ]);
 router.post('*/upload', forbiddenSend);
 
+router.delete('*/upload', isAuthUser, isAdminUser, function (req, res) {
+    if (!req.xhr) return next();
+    var fileName = './public' + (req.body || {}).path;
+    fs.stat(fileName, function (err, stat) {
+        if (err || !stat.isFile()) return res.sendStatus(400);
+        fs.unlink(fileName, function (err) {
+            if (err) return res.sendStatus(500);
+            cache.flush(cache.find(req.url + '.*'));
+            res.sendStatus(200);
+        });
+    });
+});
+router.delete('*/upload', forbiddenSend);
+
 router.get('*/upload', isAuthUser, isAdminUser, function (req, res, next) {
     if (!req.xhr) return next();
     var dir = './public/uploads' + req.params[0] + '/';
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir);
-        render(req, res, { files : [] }, { block : 'file', elem : 'list' });
-    }
-    else {
-        fs.readdir(dir, function (err, files) {
-            if (err) res.sendStatus(500);
-            render(req, res, {
-                    files :
-                        files
-                            .filter(function (file) {
-                                return fs.statSync(path.join(dir, file)).isFile();
-                            })
-                            .map(function (file) {
-                                return '/uploads' + req.params[0] + '/' + file;
-                            })
-                },
-                { block : 'file', elem : 'list' });
-        });
-    }
+    fs.stat(dir, function (err, stat) {
+        if (err) {
+            if (err.code === "ENOENT") {
+                fs.mkdir(dir, function (err) {
+                    if (err) res.sendStatus(500);
+                    else render(req, res, { files : [] }, { block : 'file', elem : 'list' });
+                });
+            }
+            else res.sendStatus(500);
+        }
+        else if (stat.isDirectory()) {
+            fs.readdir(dir, function (err, files) {
+                if (err) return res.sendStatus(500);
+                render(req, res, {
+                    files : files
+                        .filter(function (file) {
+                            return fs.statSync(path.join(dir, file)).isFile();
+                        })
+                        .map(function (file) {
+                            return '/uploads' + req.params[0] + '/' + file;
+                        })
+                    },
+                    { block : 'file', elem : 'list' });
+            });
+        }
+        else res.sendStatus(500);
+    });
 });
 router.get('*/upload', forbiddenSend);
 

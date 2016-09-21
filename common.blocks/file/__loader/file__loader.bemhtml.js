@@ -13,7 +13,7 @@ block('file').elem('loader')(
         },
         {
             block : 'button',
-            mods : { type : 'submit', theme : 'islands', size : 'm' },
+            mods : { type : 'submit', theme : 'islands', size : 'm', disabled : true },
             text : 'Загрузить'
         }
     ])

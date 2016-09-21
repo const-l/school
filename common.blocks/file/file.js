@@ -1,13 +1,22 @@
-modules.define('file', ['i-bem__dom', 'jquery'], function(provide, BEMDOM, $){
+modules.define('file', ['i-bem__dom', 'jquery', 'button'], function(provide, BEMDOM, $, button){
     var popup;
     provide(BEMDOM.decl(this.name,
         {
             onSetMod: {
                 js: {
                     inited: function () {
-                        popup = this.findBlockInside('popup').setAnchor(this.findElem('loader'));
+                        popup = this.findBlockInside('popup').setAnchor(this.findElem('list'));
                         this.bindToDomElem(this.elem('loader'), 'submit', this._onSubmit);
+                        this.findBlockInside('loader', 'attach').on('change', this._onAttachChange, this);
                         this._loadList();
+                    },
+                    '': function () {
+                        button.un(
+                            this.findElem('list'),
+                            'click',
+                            this._onClearClick,
+                            this
+                        );
                     }
                 }
             },
@@ -36,6 +45,7 @@ modules.define('file', ['i-bem__dom', 'jquery'], function(provide, BEMDOM, $){
                 e.lengthComputable && this.findBlockInside('progressbar').setVal(100 * e.loaded / e.total);
             },
             _uploadSuccess: function () {
+                this.findBlockInside('loader', 'attach').clear();
                 this.findBlockInside('progressbar').setVal(0);
                 this._loadList();
             },
@@ -44,13 +54,47 @@ modules.define('file', ['i-bem__dom', 'jquery'], function(provide, BEMDOM, $){
                     .setContent('Не удалось загрузить файл')
                     .setMod('visible', true);
             },
+            _onAttachChange: function () {
+                this.findBlockInside('loader', { block : 'button', modName : 'type', modVal : 'submit' })
+                    .setMod('disabled', !this.findBlockInside('loader', 'attach').getVal());
+            },
+            _onClearClick: function (e) {
+                var path = (e.target.params || {}).path;
+                $.ajax({
+                    url : './upload',
+                    type : 'DELETE',
+                    data : {
+                        path : path
+                    },
+                    success : this._loadList,
+                    error : function() {
+                        popup
+                            .setContent('Не удалось удалить файл')
+                            .setMod('visible', true);
+                    },
+                    cache : false,
+                    context : this
+                });
+            },
 
             _loadList : function () {
+                button.un(
+                    this.findElem('list'),
+                    'click',
+                    this._onClearClick,
+                    this
+                );
                 $.ajax({
                     url: './upload',
                     type: 'GET',
                     success: function (html) {
                         BEMDOM.replace(this.findElem('list'), html);
+                        button.on(
+                            this.findElem('list'),
+                            'click',
+                            this._onClearClick,
+                            this
+                        );
                     },
                     error: function() {
                         popup
