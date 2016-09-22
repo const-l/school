@@ -7,6 +7,8 @@ db/data.json
 public/index.min.*
 public/img/tmp/
 public/uploads/
+common.blocks/jquery/__config/
+public/jquery/
 
 # bem
 .enb/tmp/
