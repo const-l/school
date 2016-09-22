@@ -1,6 +1,6 @@
 {
   "author": "Constantine Lopatin",
-  "name": "School",
+  "name": "school",
   "email": "k.n.lopatin@gmail.com",
   "version": "0.0.0",
   "ignore": [
@@ -9,6 +9,6 @@
     "libs"
   ],
   "dependencies": {
-    "bem-components": "v3.0.0"
+    "bem-components": "3.0.1"
   }
 }

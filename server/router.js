@@ -131,16 +131,18 @@ router.get('*/upload', isAuthUser, isAdminUser, function (req, res, next) {
         else if (stat.isDirectory()) {
             fs.readdir(dir, function (err, files) {
                 if (err) return res.sendStatus(500);
-                render(req, res, {
-                    files : files
+                render(req, res, {},
+                    files
                         .filter(function (file) {
                             return fs.statSync(path.join(dir, file)).isFile();
                         })
                         .map(function (file) {
-                            return '/uploads' + req.params[0] + '/' + file;
-                        })
-                    },
-                    { block : 'file', elem : 'list' });
+                            return {
+                                block : 'file',
+                                elem : 'list-item',
+                                content : '/uploads' + req.params[0] + '/' + file
+                            };
+                        }));
             });
         }
         else res.sendStatus(500);

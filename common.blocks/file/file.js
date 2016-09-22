@@ -8,11 +8,17 @@ modules.define('file', ['i-bem__dom', 'jquery', 'button'], function(provide, BEM
                         popup = this.findBlockInside('popup').setAnchor(this.findElem('list'));
                         this.bindToDomElem(this.elem('loader'), 'submit', this._onSubmit);
                         this.findBlockInside('loader', 'attach').on('change', this._onAttachChange, this);
+                        button.on(
+                            this.elem('list'),
+                            'click',
+                            this._onClearClick,
+                            this
+                        );
                         this._loadList();
                     },
                     '': function () {
                         button.un(
-                            this.findElem('list'),
+                            this.elem('list'),
                             'click',
                             this._onClearClick,
                             this
@@ -78,23 +84,11 @@ modules.define('file', ['i-bem__dom', 'jquery', 'button'], function(provide, BEM
             },
 
             _loadList : function () {
-                button.un(
-                    this.findElem('list'),
-                    'click',
-                    this._onClearClick,
-                    this
-                );
                 $.ajax({
                     url: './upload',
                     type: 'GET',
                     success: function (html) {
-                        BEMDOM.replace(this.findElem('list'), html);
-                        button.on(
-                            this.findElem('list'),
-                            'click',
-                            this._onClearClick,
-                            this
-                        );
+                        BEMDOM.update(this.findElem('list'), html);
                     },
                     error: function() {
                         popup
