@@ -7,42 +7,44 @@ var express = require('express'),
     vow = require('vow'),
     cache = require('./cache')(),
     schemas = require('../db/schemas'),
-    fs = require('fs'),
-    path = require('path'),
-    multer = require('multer');
-
-var storage = multer.diskStorage({
-        destination: function (req, file, cb) {
-            var dir = './public/uploads' + req.params[0] + '/';
-            fs.stat(dir, function (err) {
-                if (err) {
-                    if (err.code === "ENOENT") {
-                        fs.mkdir(dir, function (err) {
-                            err? cb(err): cb(null, dir);
-                        });
-                    }
-                    else cb(err);
-                }
-                else cb(null, dir);
-            })
-        },
-        filename: function (req, file, cb) {
-            cb(null, file.originalname);
-        }
-    }),
-    upload = multer({ storage : storage });
+    upload = require('./utils/uploadRouter');
 
 var isAuthUser = function (req, res, next) {
-        (req.session.user || {}).Id?
-            next(): next('route');
+        (req.session.user || {}).Id? next(): next({ forbidden : true });
     },
     isAdminUser = function (req, res, next) {
-        (req.session.user || {}).IsAdmin?
-            next(): next('route');
+        (req.session.user || {}).IsAdmin? next(): next({ forbidden : true });
     },
     forbiddenSend = function (req, res) {
         res.sendStatus(403);
     };
+
+router.all('*', [
+    function (req, res, next) {
+        try {
+            schemas.Menu.GetMenus(function() { next(); });
+        }
+        catch (e) {
+            res.sendStatus(500);
+        }
+    },
+    function (req, res, next) {
+        try {
+            schemas.Menu.GetSidebars(function() { next(); });
+        }
+        catch (e) {
+            res.sendStatus(500);
+        }
+    },
+    function (req, res, next) {
+        try {
+            schemas.Route.GetRoutes(function() { next(); });
+        }
+        catch (e) {
+            res.sendStatus(500);
+        }
+    }
+]);
 
 router.post('/login', function (req, res) {
     utils.async(function (defer) {
@@ -66,127 +68,98 @@ router.post('/logout', function (req, res) {
     res.send(JSON.stringify({ success: (delete req.session.user )}));
 });
 
-router.post('*/save/:id', isAuthUser, isAdminUser, function (req, res) {
-    var user = req.session.user || {},
-        body = req.body,
-        content = '',
-        id = req.params.id,
-        path = req.params[0] || '/';
-    try {
-        content = JSON.stringify(body);
-    }
-    catch (e) {
-        res.status(500).send('Inner error');
-    }
-    utils.async(function (defer) {
-        cache.flush(cache.find(path + ".*"));
-        schemas.Page.saveContent(id, content, user, defer);
-    }).then(
-        function () { res.redirect(path); },
-        function (err) {
-            res.status(500).send(err);
-        }
-    );
-});
-router.post('*/save/:id', forbiddenSend);
+router.all('*/upload', isAuthUser, isAdminUser);
+router.use(upload);
 
-router.post('*/upload', [
-    isAuthUser,
-    isAdminUser,
-    upload.single('file'),
-    function (req, res, next) {
-        cache.flush(cache.find(req.url + '.*'));
-        res.status(200).end();
-    }
-]);
-router.post('*/upload', forbiddenSend);
-
-router.delete('*/upload', isAuthUser, isAdminUser, function (req, res) {
-    if (!req.xhr) return next();
-    var fileName = './public' + (req.body || {}).path;
-    fs.stat(fileName, function (err, stat) {
-        if (err || !stat.isFile()) return res.sendStatus(400);
-        fs.unlink(fileName, function (err) {
-            if (err) return res.sendStatus(500);
-            cache.flush(cache.find(req.url + '.*'));
-            res.sendStatus(200);
-        });
-    });
-});
-router.delete('*/upload', forbiddenSend);
-
-router.get('*/upload', isAuthUser, isAdminUser, function (req, res, next) {
-    if (!req.xhr) return next();
-    var dir = './public/uploads' + req.params[0] + '/';
-    fs.stat(dir, function (err, stat) {
-        if (err) {
-            if (err.code === "ENOENT") {
-                fs.mkdir(dir, function (err) {
-                    if (err) res.sendStatus(500);
-                    else render(req, res, { files : [] }, { block : 'file', elem : 'list' });
+router.route('*')
+    .get(function (req, res, next) {
+            var id = req.query.id,
+                slice = ((req.query.page || 1) - 1) * -10;
+            if (id) return next();
+            schemas.Route
+                .findOne({ Path : req.path })
+                .populate({
+                    path : 'Pages',
+                    select: 'Content',
+                    slice : [slice, 10]
+                })
+                .exec(function (err, doc) {
+                    if (err) return next(err);
+                    if (doc) {
+                        render(req, res, {
+                            Menus : cache.get('Menu'),
+                            Sidebars : cache.get('Sidebar'),
+                            main : doc.Pages.map(function (item) {
+                                return Object.assign({
+                                    block : doc.Block,
+                                    edit_id : item._id.toString()
+                                }, JSON.parse(item.Content || '[]'));
+                            })
+                        });
+                    }
+                    else next('route');
                 });
-            }
-            else res.sendStatus(500);
-        }
-        else if (stat.isDirectory()) {
-            fs.readdir(dir, function (err, files) {
-                if (err) return res.sendStatus(500);
-                render(req, res, {},
-                    files
-                        .filter(function (file) {
-                            return fs.statSync(path.join(dir, file)).isFile();
-                        })
-                        .map(function (file) {
-                            return {
-                                block : 'file',
-                                elem : 'list-item',
-                                content : '/uploads' + req.params[0] + '/' + file
-                            };
-                        }));
+        },
+        function (req, res, next) {
+            var route = (cache.get('Route') || {})[req.path],
+                id = req.query.id,
+                mode = !!req.query.mode;
+            if (!route) return next('route');
+            if (mode) return next();
+            schemas.Page.findById(id, 'Content', function (err, doc) {
+                if (err) return next(err);
+                if (doc) {
+                    render(req, res, {
+                        Menus : cache.get('Menu'),
+                        Sidebars : cache.get('Sidebar'),
+                        main : Object.assign({ block : route.Block }, JSON.parse(doc.Content || '[]'))
+                    });
+                }
+                else next('route');
             });
-        }
-        else res.sendStatus(500);
-    });
-});
-router.get('*/upload', forbiddenSend);
-
-///TODO переработать на прослойки, чтобы все роуты обрабатывались однотипно
-router.get('*', function (req, res, next) {
-    var isEditMod = !!req.query['edit_mode'],
-        queryId = req.query.id || '',
-        user = req.session.user || {};
-    if (isEditMod && !user.IsAdmin) return res.redirect(req._parsedUrl.pathname);
-    var route = (cache.get('Route') || {})[req.path];
-    if (route) {
-        schemas.Page.find({_id : {$in : route.Pages}}, 'Content', function (err, docs) {
+        })
+    .all(isAuthUser, isAdminUser)
+    .get(function (req, res, next) {
+        var route = (cache.get('Route') || {})[req.path],
+            id = req.query.id;
+        schemas.Page.findById(id, 'Content', function (err, doc) {
             if (err) return next(err);
-            if (docs && docs.length) {
+            if (doc) {
                 render(req, res, {
                     Menus : cache.get('Menu'),
                     Sidebars : cache.get('Sidebar'),
-                    main : docs.map(function(item) {
-                        var _id = item._id.toString(),
-                            result = Object.assign({ block : route.Block }, JSON.parse(item.Content || '[]'));
-                        /**
-                         * Если редактирование текущей записи, блок становится "editor" с модификатором в значении
-                         * имени страницы, иначе просто проброс id записи в БД
-                         */
-                        if (isEditMod && queryId === _id) {
-                            result.block = 'editor';
-                            result.mods = {page: route.Block};
-                            result.id = _id;
-                        }
-                        else result.edit_id = _id;
-                        return result;
-                    })
+                    main : Object.assign({
+                        block : 'editor',
+                        mods : { page : route.Block },
+                        id : id
+                    }, JSON.parse(doc.Content || '[]'))
                 });
             }
-            //TODO: обработать пустые страницы
-            else next();
+            else next('route');
         });
-    }
-    else next();
-});
+    })
+    .post(function (req, res) {
+        var user = req.session.user,
+            body = req.body,
+            content = '',
+            id = req.query.id,
+            path = req.params[0] || '/';
+        try {
+            content = JSON.stringify(body);
+        }
+        catch (e) {
+            res.sendStatus(500);
+        }
+        utils.async(function (defer) {
+            cache.flush(cache.find(path + ".*"));
+            schemas.Page.saveContent(id, content, user, defer);
+        }).then(
+            function () { res.redirect(path); },
+            function () {
+                res.sendStatus(500);
+            }
+        );
+    });
 
 router.all('*', function (req, res) {
     res.status(404);
@@ -195,6 +168,11 @@ router.all('*', function (req, res) {
         title: 'Страница не найдена',
         'main-content' : { block: 'empty' }
     });
+});
+
+router.use(function (err, req, res, next) {
+    if (err.forbidden) return forbiddenSend(req, res);
+    else next();
 });
 
 module.exports = router;

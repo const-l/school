@@ -11,7 +11,7 @@ block('editor')(
     }),
     tag()('form'),
     js()(true),
-    attrs()(function () { return { action : "save/" + this.ctx.id, method : "post" }; }),
+    attrs()(function () { return { action : "./?id=" + this.ctx.id, method : "post" }; }),
     content()(function () {
         return [
             this.modValue || '',

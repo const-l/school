@@ -8,7 +8,7 @@ block('button').mod('type', 'edit')(
                         {
                             block : 'button',
                             mods : { type : 'link', view : 'plain' },
-                            url : '?edit_mode=1&id=' + this.ctx.id,
+                            url : '?mode=1&id=' + this.ctx.id,
                             icon : {
                                 block : 'icon',
                                 url : '/img/edit-icon.png'
