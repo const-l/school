@@ -8,9 +8,12 @@ block('page')(
                     { elem: 'css', url: this.data.settings.baseUrl + 'index.min.css' }
                 ],
                 scripts: [
-                    { elem: 'js', url: this.data.settings.baseUrl + 'index.min.js' }
+                    { elem : 'js', url : this.data.settings.baseUrl + 'index.min.js' }
                 ],
                 content: [
+                    {
+                        block : 'system'
+                    },
                     {
                         block: 'header'
                     },

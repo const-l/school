@@ -6,6 +6,7 @@
         { block: 'root' },
         { block: 'clear' },
         { mod : 'size'},
-        { block : 'jquery' }
+        { block : 'jquery' },
+        { block : 'system' },
     ]
 })

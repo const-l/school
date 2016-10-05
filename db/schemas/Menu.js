@@ -11,7 +11,7 @@ module.exports = exports = function Menu(mongoose) {
     var Menu = new Schema({
         Caption : { type : String, required : true },
         Type    : { type : String, required : true, enum : ['Menu', 'Sidebar'], default : 'Menu' },
-        Route   : { type : Schema.Types.ObjectId, ref : 'Route'/*, required : true*/ },
+        Route   : { type : Schema.Types.ObjectId, ref : 'Route' },
         Position: { type : Number, required : true, default : 0 },
         Parent  : { type : Schema.Types.ObjectId, ref : 'Menu' }
     });

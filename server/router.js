@@ -6,6 +6,7 @@ var express = require('express'),
     utils = require('./utils')({}),
     vow = require('vow'),
     cache = require('./cache')(),
+    dataModel = require('./data'),
     schemas = require('../db/schemas'),
     upload = require('./utils/uploadRouter');
 
@@ -74,31 +75,33 @@ router.use(upload);
 router.route('*')
     .get(function (req, res, next) {
             var id = req.query.id,
-                slice = ((req.query.page || 1) - 1) * -10;
-            if (id) return next();
-            schemas.Route
-                .findOne({ Path : req.path })
-                .populate({
-                    path : 'Pages',
-                    select: 'Content',
-                    slice : [slice, 10]
-                })
-                .exec(function (err, doc) {
-                    if (err) return next(err);
+                mode = !!req.query.mode,
+                config = { path : req.path, page : req.query.page };
+            if (id || mode) return next();
+            dataModel.Content.getByPath(config).then(
+                function (result) {
+                    if (!result || !result.length || result.length < 2 || result[0]) {
+                        return next((result || {})[0] || 'Data error');
+                    }
+                    var doc = result[1];
                     if (doc) {
+                        var main = doc.Pages.map(function (item) {
+                            return Object.assign({
+                                block : doc.Block,
+                                edit_id : item._id.toString()
+                            }, JSON.parse(item.Content || '[]'));
+                        });
+                        !main.length && main.push({ block : 'data', elem : 'empty' });
+                        main.push({ block : 'button', mods : { type : 'add' }});
                         render(req, res, {
                             Menus : cache.get('Menu'),
                             Sidebars : cache.get('Sidebar'),
-                            main : doc.Pages.map(function (item) {
-                                return Object.assign({
-                                    block : doc.Block,
-                                    edit_id : item._id.toString()
-                                }, JSON.parse(item.Content || '[]'));
-                            })
+                            main : main
                         });
                     }
                     else next('route');
-                });
+                }
+            );
         },
         function (req, res, next) {
             var route = (cache.get('Route') || {})[req.path],
@@ -106,8 +109,11 @@ router.route('*')
                 mode = !!req.query.mode;
             if (!route) return next('route');
             if (mode) return next();
-            schemas.Page.findById(id, 'Content', function (err, doc) {
-                if (err) return next(err);
+            dataModel.Content.getById(id).then(function (result) {
+                if (!result || !result.length || result.length < 2 || result[0]) {
+                    return next((result || {})[0] || 'Data error');
+                }
+                var doc = result[1];
                 if (doc) {
                     render(req, res, {
                         Menus : cache.get('Menu'),
@@ -121,40 +127,53 @@ router.route('*')
     .all(isAuthUser, isAdminUser)
     .get(function (req, res, next) {
         var route = (cache.get('Route') || {})[req.path],
-            id = req.query.id;
-        schemas.Page.findById(id, 'Content', function (err, doc) {
-            if (err) return next(err);
-            if (doc) {
-                render(req, res, {
-                    Menus : cache.get('Menu'),
-                    Sidebars : cache.get('Sidebar'),
-                    main : Object.assign({
-                        block : 'editor',
-                        mods : { page : route.Block },
-                        id : id
-                    }, JSON.parse(doc.Content || '[]'))
-                });
+            id = req.query.id || null;
+        dataModel.Content.getById(id).then(function (result) {
+            if (!result || !result.length || result.length < 2 || result[0]) {
+                return next((result || {})[0] || 'Data error');
             }
-            else next('route');
+            var doc = result[1];
+            if (!doc) id = dataModel.genId();
+            render(req, res, {
+                Menus : cache.get('Menu'),
+                Sidebars : cache.get('Sidebar'),
+                main : Object.assign({
+                    block : 'editor',
+                    mods : { page : route.Block },
+                    id : id
+                }, JSON.parse((doc || {}).Content || '[]'))
+            });
         });
     })
     .post(function (req, res) {
-        var user = req.session.user,
-            body = req.body,
-            content = '',
-            id = req.query.id,
+        var content = '',
             path = req.params[0] || '/';
         try {
-            content = JSON.stringify(body);
+            content = JSON.stringify(req.body);
         }
         catch (e) {
             res.sendStatus(500);
         }
-        utils.async(function (defer) {
-            cache.flush(cache.find(path + ".*"));
-            schemas.Page.saveContent(id, content, user, defer);
-        }).then(
-            function () { res.redirect(path); },
+        dataModel.Content.save({ id : req.query.id, content : content, user : req.session.user, path : path }).then(
+            function () {
+                cache.flush(cache.find(path + '.*'));
+                res.redirect(path);
+            },
+            function () {
+                res.sendStatus(500);
+            }
+        );
+    })
+    .delete(function (req, res, next) {
+        if (!req.xhr) return next();
+        var id = (req.body || {}).id || '',
+            path = req.params[0] || '/';
+        if (!id) next();
+        dataModel.Content.remove({ id : id, path : path }).then(
+            function () {
+                cache.flush(cache.find(path + '.*'));
+                res.sendStatus(200);
+            },
             function () {
                 res.sendStatus(500);
             }

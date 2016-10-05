@@ -1,7 +1,18 @@
 .control-group_type_edit
   width: 100%;
-  & .button
+  &::after
+    visibility: hidden;
+    content: '\00A0';
+    clear: both;
+  & > .button
     float: right;
+    margin-right: 16px;
+    opacity: 0.3;
+    transition: opacity 0.1s ease-out;
+    &:hover
+      opacity: 1;
+    &:first-child
+      margin-right: 0;
     & .icon
       background-size: 16px;
       width: 16px;

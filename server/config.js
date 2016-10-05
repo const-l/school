@@ -9,7 +9,8 @@ module.exports = {
     session: require('./session'),
     mongoose : {
         uri : 'mongodb://localhost/school_dev',
-		dataFilePath : './db/data.json'
+		dataFilePath : './db/data.json',
+        pageLimit : 10
     },
     cacheAge: 30 * 60 * 1000,
     public: './public',
