@@ -2,21 +2,22 @@ var express = require('express'),
     router = express.Router(),
     render = require('../render'),
     cache = require('../cache')(),
+    config = require('../config'),
     fs = require('fs'),
     path = require('path'),
     multer = require('multer');
 
 var storage = multer.diskStorage({
         destination: function (req, file, cb) {
-            var dir = './public/uploads' + req.params[0] + '/';
+            if (!req.query.id) return cb('Empty id');
+            var dir = path.join(config.public, 'uploads', req.params[0], req.query.id);
             fs.stat(dir, function (err) {
                 if (err) {
-                    if (err.code === "ENOENT") {
+                    err.code === "ENOENT"?
                         fs.mkdir(dir, function (err) {
                             err? cb(err): cb(null, dir);
-                        });
-                    }
-                    else cb(err);
+                        }):
+                        cb(err);
                 }
                 else cb(null, dir);
             })
@@ -29,16 +30,11 @@ var storage = multer.diskStorage({
 
 router.route('*/upload')
     .get(function (req, res, next) {
-        if (!req.xhr) return next();
-        var dir = './public/uploads' + req.params[0] + '/';
+        if (!req.xhr || !req.query.id) return next();
+        var dir = path.join(config.public, 'uploads', req.params[0], req.query.id);
         fs.stat(dir, function (err, stat) {
             if (err) {
-                if (err.code === "ENOENT") {
-                    fs.mkdir(dir, function (err) {
-                        if (err) res.sendStatus(500);
-                        else render(req, res, {}, { block : 'file', elem : 'list' });
-                    });
-                }
+                if (err.code === "ENOENT") render(req, res, {}, { block : 'file', elem : 'list' });
                 else res.sendStatus(500);
             }
             else if (stat.isDirectory()) {
@@ -53,7 +49,7 @@ router.route('*/upload')
                                 return {
                                     block : 'file',
                                     elem : 'list-item',
-                                    content : '/uploads' + req.params[0] + '/' + file
+                                    content : '/uploads' + req.params[0] + '/' + req.query.id + '/' + file
                                 };
                             }));
                 });
@@ -68,7 +64,7 @@ router.route('*/upload')
         })
     .delete(function (req, res, next) {
         if (!req.xhr) return next();
-        var fileName = './public' + (req.body || {}).path;
+        var fileName = path.join('public', (req.body || {}).path);
         fs.stat(fileName, function (err, stat) {
             if (err || !stat.isFile()) return res.sendStatus(400);
             fs.unlink(fileName, function (err) {

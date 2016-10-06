@@ -5,7 +5,7 @@ block('editor')(
             content : [
                 this.ctx,
                 { block : 'clear' },
-                { block : 'file' }
+                { block : 'file', id : this.ctx.id }
             ]
         }
     }),
