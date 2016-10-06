@@ -1,0 +1,18 @@
+block('directions')(
+    content()(function () {
+        var config = this.ctx.config,
+            prev = {
+                block : 'button',
+                mods : { type : 'link', theme : 'islands', size : 'l' },
+                text : 'Назад'
+            },
+            next = {
+                block : 'button',
+                mods : { type : 'link', theme : 'islands', size : 'l' },
+                text : 'Вперед'
+            };
+        config.prev? (prev.url = config.prev.url): (prev.mods.disabled = true);
+        config.next? (next.url = config.next.url): (next.mods.disabled = true);
+        return [prev, next];
+    })
+);

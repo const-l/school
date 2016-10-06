@@ -12,24 +12,41 @@ var content = {
             page = opt.page || 1,
             limit = opt.limit || config.mongoose.pageLimit,
             skip = opt.skip || (page - 1) * limit;
-        return utils.async(function (defer) {
-            schemas.Route
-                .findOne({ Path : path })
-                .populate({
-                    path : 'Pages',
-                    select: 'Content',
-                    options : {
-                        limit : limit,
-                        sort : { ModifiedOn : -1 },
-                        skip : skip
+        return utils.chain([
+            function (defer) {
+                schemas.Route
+                    .findOne({Path: path})
+                    .populate({
+                        path: 'Pages',
+                        select: 'Content',
+                        options: {
+                            limit: limit,
+                            sort: {ModifiedOn: -1},
+                            skip: skip
+                        }
+                    })
+                    .exec(function (err, doc) {
+                        err? defer.reject(err): defer.resolve(doc);
+                    });
+            },
+            function (defer) {
+                schemas.Route.findOne({Path: path}).populate('Pages', '_id').exec(function (err, doc) {
+                    if (err) return defer.reject(err);
+                    var res = {};
+                    if (doc) {
+                        page > 1 && (res.prev = {url: path + '?page=' + (page - 1)});
+                        skip + limit < (doc.Pages || []).length && (res.next = {url: path + '?page=' + (page + 1)});
                     }
-                })
-                .exec(function () { defer.resolve(arguments); });
-        }, this);
+                    defer.resolve(res);
+                });
+            }
+        ], this);
     },
     getById: function (id) {
         return utils.async(function (defer) {
-            schemas.Page.findById(id, 'Content', function () { defer.resolve(arguments); })
+            schemas.Page.findById(id, 'Content', function (err, doc) {
+                err? defer.reject(err): defer.resolve(doc);
+            })
         }, this);
     },
     save: function (opt) {

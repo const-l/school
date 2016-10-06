@@ -80,10 +80,11 @@ router.route('*')
             if (id || mode) return next();
             dataModel.Content.getByPath(config).then(
                 function (result) {
-                    if (!result || !result.length || result.length < 2 || result[0]) {
-                        return next((result || {})[0] || 'Data error');
+                    if (!result || !result.length || result.length < 2) {
+                        return res.sendStatus(500);
                     }
-                    var doc = result[1];
+                    var doc = result[0],
+                        dir = result[1];
                     if (doc) {
                         var main = doc.Pages.map(function (item) {
                             return Object.assign({
@@ -92,7 +93,8 @@ router.route('*')
                             }, JSON.parse(item.Content || '[]'));
                         });
                         !main.length && main.push({ block : 'data', elem : 'empty' });
-                        main.push({ block : 'button', mods : { type : 'add' }});
+                        main.unshift({ block : 'button', mods : { type : 'add' }});
+                        (dir.prev || dir.next) && main.push({ block : 'directions', config : dir });
                         render(req, res, {
                             Menus : cache.get('Menu'),
                             Sidebars : cache.get('Sidebar'),
@@ -100,7 +102,8 @@ router.route('*')
                         });
                     }
                     else next('route');
-                }
+                },
+                function (err) { next(err); }
             );
         },
         function (req, res, next) {
@@ -109,41 +112,39 @@ router.route('*')
                 mode = !!req.query.mode;
             if (!route) return next('route');
             if (mode) return next();
-            dataModel.Content.getById(id).then(function (result) {
-                if (!result || !result.length || result.length < 2 || result[0]) {
-                    return next((result || {})[0] || 'Data error');
-                }
-                var doc = result[1];
-                if (doc) {
-                    render(req, res, {
-                        Menus : cache.get('Menu'),
-                        Sidebars : cache.get('Sidebar'),
-                        main : Object.assign({ block : route.Block }, JSON.parse(doc.Content || '[]'))
-                    });
-                }
-                else next('route');
-            });
+            dataModel.Content.getById(id).then(
+                function (doc) {
+                    if (doc) {
+                        render(req, res, {
+                            Menus : cache.get('Menu'),
+                            Sidebars : cache.get('Sidebar'),
+                            main : Object.assign({ block : route.Block }, JSON.parse(doc.Content || '[]'))
+                        });
+                    }
+                    else next('route');
+                },
+                function (err) { next(err); }
+            );
         })
     .all(isAuthUser, isAdminUser)
     .get(function (req, res, next) {
         var route = (cache.get('Route') || {})[req.path],
             id = req.query.id || null;
-        dataModel.Content.getById(id).then(function (result) {
-            if (!result || !result.length || result.length < 2 || result[0]) {
-                return next((result || {})[0] || 'Data error');
-            }
-            var doc = result[1];
-            if (!doc) id = dataModel.genId();
-            render(req, res, {
-                Menus : cache.get('Menu'),
-                Sidebars : cache.get('Sidebar'),
-                main : Object.assign({
-                    block : 'editor',
-                    mods : { page : route.Block },
-                    id : id
-                }, JSON.parse((doc || {}).Content || '[]'))
-            });
-        });
+        dataModel.Content.getById(id).then(
+            function (doc) {
+                !doc && (id = dataModel.genId());
+                render(req, res, {
+                    Menus : cache.get('Menu'),
+                    Sidebars : cache.get('Sidebar'),
+                    main : Object.assign({
+                        block : 'editor',
+                        mods : { page : route.Block },
+                        id : id
+                    }, JSON.parse((doc || {}).Content || '[]'))
+                });
+            },
+            function(err) { next(err) }
+        );
     })
     .post(function (req, res) {
         var content = '',
