@@ -89,7 +89,8 @@ router.route('*')
                         var main = doc.Pages.map(function (item) {
                             return Object.assign({
                                 block : doc.Block,
-                                edit_id : item._id.toString()
+                                mods : { view : 'list' },
+                                Id : item._id.toString()
                             }, JSON.parse(item.Content || '[]'));
                         });
                         !main.length && main.push({ block : 'data', elem : 'empty' });
@@ -153,7 +154,7 @@ router.route('*')
             content = JSON.stringify(req.body);
         }
         catch (e) {
-            res.sendStatus(500);
+            return res.sendStatus(500);
         }
         dataModel.Content.save({ id : req.query.id, content : content, user : req.session.user, path : path }).then(
             function () {

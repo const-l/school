@@ -5,6 +5,7 @@ block('editor').mod('page', 'article')(
                 block : 'input',
                 name: 'caption',
                 mods: {theme: 'islands', width: 'available', size: 'm'},
+                placeholder : 'Заголовок',
                 val : this.ctx.caption
             }
         });

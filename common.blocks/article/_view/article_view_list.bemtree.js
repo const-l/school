@@ -1,11 +1,11 @@
-block('article')(
+block('article').mod('view', 'list')(
     content()(function () {
         var content = Array.isArray(this.ctx.content)? this.ctx.content: this.ctx.content? [this.ctx.content]: [];
-        if (this.ctx.edit_id && this.data.user && this.data.user.IsAdmin) {
+        if (this.ctx.Id && this.data.user && this.data.user.IsAdmin) {
             content.push({
                 block : 'control-group',
                 mods : { type : 'edit' },
-                id : this.ctx.edit_id
+                id : this.ctx.Id
             });
         }
         return content;
