@@ -1,6 +1,6 @@
-module.exports = {
+var config = {
     express: {
-        port: 3000
+        port: process.env.PORT || 3000
     },
     /**
     * file session.js look like this
@@ -8,16 +8,18 @@ module.exports = {
     */
     session: require('./session'),
     mongoose : {
-        uri : 'mongodb://localhost/school_dev',
+        uri : process.env.MONGO_BASE || 'mongodb://localhost/school_dev',
 		dataFilePath : './db/data.json',
-        pageLimit : 10
+        pageLimit : process.env.MONGO_PAGE_LIMIT || 10
     },
     cacheAge: 30 * 60 * 1000,
     public: './public',
-    settings: {
-        baseUrl: 'http://localhost:3000/'
-    },
+    settings: {},
     bem: {
         bundles: ['index']
     }
 };
+
+config.settings.baseUrl = 'http://' + (process.env.URL || 'localhost') + ':' + config.express.port + '/';
+
+module.exports = config;

@@ -1,12 +1,15 @@
 {
   "name": "School",
-  "description": "BEM project",
-  "version": "0.0.0",
+  "description": "BEM-Site for school",
+  "version": "0.0.1",
   "author": {
     "name": "Constantine Lopatin",
     "email": "k.n.lopatin@gmail.com"
   },
-  "repository": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/const-l/school"
+  },
   "engines": {
     "node": ">=0.10.0"
   },
@@ -35,7 +38,7 @@
     "borschik": "^1.6.0"
   },
   "scripts": {
-    "start": "enb server",
+    "start": "node production/production.js",
     "postinstall": "npm run deps",
     "deps": "bower install",
     "postinstall": "npm run deps"

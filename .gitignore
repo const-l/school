@@ -4,6 +4,7 @@ libs/
 
 server/session.js
 db/data.json
+production/*.json
 public/index.min.*
 public/img/tmp/
 public/uploads/

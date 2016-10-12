@@ -18,7 +18,7 @@ var path = require('path'),
 
 app
     .disable('x-powered-by')
-    .set('handle', process.env.PORT || config.express.port)
+    .set('handle', config.express.port)
     .use(favicon(path.join(staticFolder, 'favicon.ico')))
     .use(serveStatic(staticFolder))
     .use(bodyParser.json())

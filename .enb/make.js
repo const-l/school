@@ -21,7 +21,7 @@ var techs = {
     borschikTech = require('enb-borschik/techs/borschik'); 
 
 module.exports = function (config) {
-    var isProd = process.env.YENV === 'production';
+    var isProd = process.env.NODE_ENV === 'production';
 
     config.nodes('*.bundles/*', function (nodeConfig) {
         nodeConfig.addTechs([
