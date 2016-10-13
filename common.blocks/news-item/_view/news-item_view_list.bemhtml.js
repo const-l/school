@@ -18,12 +18,12 @@ block('news-item').mod('view', 'list')(
                 content : {
                     block : 'link',
                     url : '?id=' + this.ctx.Id,
-                    content : this.ctx.caption
+                    content : this.ctx.caption || 'Без названия'
                 }
             },
             {
                 elem : 'preview',
-                content : this.ctx.preview
+                content : this.ctx.preview || ''
             },
             this.ctx.buttons);
         return content;
