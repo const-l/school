@@ -20,32 +20,18 @@ var isAuthUser = function (req, res, next) {
         res.sendStatus(403);
     };
 
-router.all('*', [
-    function (req, res, next) {
-        try {
-            schemas.Menu.GetMenus(function() { next(); });
-        }
-        catch (e) {
-            res.sendStatus(500);
-        }
-    },
-    function (req, res, next) {
-        try {
-            schemas.Menu.GetSidebars(function() { next(); });
-        }
-        catch (e) {
-            res.sendStatus(500);
-        }
-    },
-    function (req, res, next) {
-        try {
-            schemas.Route.GetRoutes(function() { next(); });
-        }
-        catch (e) {
-            res.sendStatus(500);
-        }
+var methods = [
+    schemas.Menu.GetMenus.bind(schemas.Menu),
+    schemas.Menu.GetSidebars.bind(schemas.Menu),
+    schemas.Route.GetRoutes.bind(schemas.Route)
+];
+
+router.all('*', methods.map(function(item) {
+    return function(req, res, next) {
+        try { item(function() { next(); }); }
+        catch (e) { res.sendStatus(500); }
     }
-]);
+}));
 
 router.post('/login', function (req, res) {
     utils.async(function (defer) {
@@ -80,11 +66,12 @@ router.route('*')
             if (id || mode) return next();
             dataModel.Content.getByPath(config).then(
                 function (result) {
-                    if (!result || !result.length || result.length < 2) {
+                    if (!result || !result.length || result.length < 3) {
                         return res.sendStatus(500);
                     }
-                    var doc = result[0],
-                        dir = result[1];
+                    var carousel = result[0],
+                        doc = result[1],
+                        dir = result[2];
                     if (doc) {
                         var main = doc.Pages.map(function (item) {
                             return Object.assign({
@@ -99,6 +86,7 @@ router.route('*')
                         render(req, res, {
                             Menus : cache.get('Menu'),
                             Sidebars : cache.get('Sidebar'),
+                            carousel : carousel,
                             main : main
                         });
                     }

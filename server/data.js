@@ -1,8 +1,14 @@
 var mongoose = require('mongoose'),
     schemas = require('../db/schemas'),
+    fs = require('fs'),
+    Path = require('path'),
+    Fs = require('./utils/fs'),
 
     config = require('./config'),
+    cache = require('./cache')(),
     utils = require('./utils')();
+
+const CAROUSEL_KEY = 'carousel_images';
 
 var content = {
 
@@ -13,6 +19,23 @@ var content = {
             limit = opt.limit || config.mongoose.pageLimit,
             skip = opt.skip || (page - 1) * limit;
         return utils.chain([
+            function (defer) {
+                if (cache.exists(CAROUSEL_KEY)) return defer.resolve(cache.get(CAROUSEL_KEY));
+                Fs.mkdir(config.settings.carousel)
+                    .then(
+                        function () {
+                            fs.readdir(config.settings.carousel, function (err, files) {
+                                if (err) return defer.reject(err);
+                                cache.set(
+                                    CAROUSEL_KEY,
+                                    files.filter(function(file) {
+                                        return fs.statSync(Path.join(config.settings.carousel, file)).isFile();
+                                    }))? defer.resolve(cache.get(CAROUSEL_KEY)): defer.reject(new Error());
+                            });
+                        },
+                        function (err) { defer.reject(err); }
+                    );
+            },
             function (defer) {
                 schemas.Route
                     .findOne({Path: path})

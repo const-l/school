@@ -3,46 +3,20 @@ var express = require('express'),
     render = require('../render'),
     cache = require('../cache')(),
     config = require('../config'),
-    utils = require('./index')(),
     fs = require('fs'),
     path = require('path'),
+    Fs = require('./fs'),
     multer = require('multer');
 
-var mkdir = function (dir) {
-        return function (defer) {
-            fs.stat(dir, function (err, stat) {
-                if (err) {
-                    if (err.code === "ENOENT")
-                        fs.mkdir(dir, function (err) {
-                            err ? defer.reject(err) : defer.resolve();
-                        });
-                    else defer.reject(err);
-                }
-                else if (stat.isDirectory()) defer.resolve();
-                else defer.reject('Inner error');
-            });
-        }
-    },
-    storage = multer.diskStorage({
+var storage = multer.diskStorage({
         destination: function (req, file, cb) {
             if (!req.query.id) return cb('Empty id');
             var dir = path.join(config.public, 'uploads', req.params[0], req.query.id);
-            fs.stat(dir, function (err) {
-                if (err && err.code === "ENOENT") {
-                    var paths = [];
-                    dir.split(path.sep).reduce(function (prev, curr) {
-                        var dir = path.join(prev, curr);
-                        paths.push(dir);
-                        return dir;
-                    });
-                    utils.chain(paths.map(function(item) { return mkdir(item); }), this)
-                        .then(
-                            function() { cb(null, dir); },
-                            function(err) { cb(err); }
-                        );
-                }
-                else cb(err, dir);
-            });
+            Fs.mkdir(dir)
+                .then(
+                    function() { cb(null, dir); },
+                    function (err) { cb(err); }
+                );
         },
         filename: function (req, file, cb) {
             cb(null, file.originalname);

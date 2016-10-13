@@ -7,6 +7,7 @@ db/data.json
 production/*.json
 public/index.min.*
 public/img/tmp/
+public/img/carousel/
 public/uploads/
 common.blocks/jquery/__config/
 public/jquery/

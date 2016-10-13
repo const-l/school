@@ -1,3 +1,5 @@
+var path = require('path');
+
 var config = {
     express: {
         port: process.env.PORT || 3000
@@ -21,5 +23,6 @@ var config = {
 };
 
 config.settings.baseUrl = 'http://' + (process.env.URL || 'localhost') + ':' + config.express.port + '/';
+config.settings.carousel = process.env.CAROUSEL_PATH || path.join(config.public, 'img', 'carousel');
 
 module.exports = config;
