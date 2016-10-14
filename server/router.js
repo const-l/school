@@ -66,12 +66,13 @@ router.route('*')
             if (id || mode) return next();
             dataModel.Content.getByPath(config).then(
                 function (result) {
-                    if (!result || !result.length || result.length < 3) {
+                    if (!result || !result.last) {
                         return res.sendStatus(500);
                     }
-                    var carousel = result[0],
-                        doc = result[1],
-                        dir = result[2];
+                    result = result.last();
+                    var carousel = result.carousel,
+                        doc = result.doc,
+                        dir = result.dir;
                     if (doc) {
                         var main = doc.Pages.map(function (item) {
                             return Object.assign({

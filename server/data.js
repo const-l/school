@@ -14,23 +14,30 @@ var content = {
 
     getByPath: function (opt) {
         opt = opt || {};
-        var path = opt.path || '/',
+        var result = {},
+            path = opt.path || '/',
             page = opt.page || 1,
             limit = opt.limit || config.mongoose.pageLimit,
             skip = opt.skip || (page - 1) * limit;
         return utils.chain([
             function (defer) {
-                if (cache.exists(CAROUSEL_KEY)) return defer.resolve(cache.get(CAROUSEL_KEY));
+                if (cache.exists(CAROUSEL_KEY)) {
+                    result.carousel = cache.get(CAROUSEL_KEY);
+                    return defer.resolve();
+                }
                 Fs.mkdir(config.settings.carousel)
                     .then(
                         function () {
                             fs.readdir(config.settings.carousel, function (err, files) {
                                 if (err) return defer.reject(err);
-                                cache.set(
-                                    CAROUSEL_KEY,
-                                    files.filter(function(file) {
-                                        return fs.statSync(Path.join(config.settings.carousel, file)).isFile();
-                                    }))? defer.resolve(cache.get(CAROUSEL_KEY)): defer.reject(new Error());
+                                var list = files.filter(function(file) {
+                                    return fs.statSync(Path.join(config.settings.carousel, file)).isFile();
+                                });
+                                if (cache.set(CAROUSEL_KEY, list)) {
+                                    result.carousel = cache.get(CAROUSEL_KEY);
+                                    defer.resolve();
+                                }
+                                else defer.reject(new Error());
                             });
                         },
                         function (err) { defer.reject(err); }
@@ -49,18 +56,22 @@ var content = {
                         }
                     })
                     .exec(function (err, doc) {
-                        err? defer.reject(err): defer.resolve(doc);
+                        if (err) defer.reject(err);
+                        else {
+                            result.doc = doc;
+                            defer.resolve();
+                        }
                     });
             },
             function (defer) {
                 schemas.Route.findOne({Path: path}).populate('Pages', '_id').exec(function (err, doc) {
                     if (err) return defer.reject(err);
-                    var res = {};
+                    result.dir = {};
                     if (doc) {
-                        page > 1 && (res.prev = {url: path + '?page=' + (page - 1)});
-                        skip + limit < (doc.Pages || []).length && (res.next = {url: path + '?page=' + (page + 1)});
+                        page > 1 && (result.dir.prev = {url: path + '?page=' + (page - 1)});
+                        skip + limit < (doc.Pages || []).length && (result.dir.next = {url: path + '?page=' + (page + 1)});
                     }
-                    defer.resolve(res);
+                    defer.resolve(result);
                 });
             }
         ], this);
