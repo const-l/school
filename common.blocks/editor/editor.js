@@ -1,4 +1,4 @@
-modules.define('editor', ['i-bem__dom', 'jquery', 'tinymce'], function(provide, BEMDOM, $){
+modules.define('editor', ['i-bem__dom', 'tinymce__settings', 'tinymce'], function(provide, BEMDOM, settings){
     provide(BEMDOM.decl(this.name,
         {
             /* методы экземпляра */
@@ -6,26 +6,14 @@ modules.define('editor', ['i-bem__dom', 'jquery', 'tinymce'], function(provide, 
                 js: {
                     inited: function () {
                         this.bindTo('submit', this._onSubmit);
-                        tinymce.init({
-                            selector: "#content",
-                            menubar: false,
-                            statusbar: false,
-                            plugins: [
-                                "advlist autolink link image lists anchor searchreplace table contextmenu paste textcolor colorpicker textpattern"
-                            ],
-                            toolbar_items_size: 'small',
-                            toolbar1: "bold italic underline strikethrough | forecolor | alignleft aligncenter alignright alignjustify | fontsizeselect",
-                            toolbar2: "undo redo | cut copy paste | searchreplace | bullist numlist | outdent indent | link unlink image table ",
-                            /*language: 'ru_RU',*/
-                            height: 200,
-                            setup: function (editor) {
-                                editor.on('init', function (e) {
-                                    this.findBlockInside('button')
-                                        .setMod('hidden', false);
-                                    this.findBlockInside('spin').setMod('visible', false);
-                                }.bind(this));
-                            }.bind(this)
-                        });
+                        settings.setup = function (editor) {
+                            editor.on('init', function (e) {
+                                this.findBlockInside('button')
+                                    .setMod('hidden', false);
+                                this.findBlockInside('spin').setMod('visible', false);
+                            }.bind(this));
+                        }.bind(this);
+                        tinymce.init(settings);
                     }
                 }
             },
