@@ -36,8 +36,8 @@ module.exports = exports = function utils(config) {
         var defer = vow.defer(),
             args = Array.prototype.slice.call(arguments, 2);
         args.unshift(defer);
-        func.apply(ctx, args);
-        return defer.promise();
+        var result = func.apply(ctx, args);
+        return vow.isPromise(result)? result: defer.promise();
     }
 
     /**

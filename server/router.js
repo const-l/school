@@ -24,17 +24,7 @@ var methods = [
     schemas.Menu.GetMenus.bind(schemas.Menu),
     schemas.Menu.GetSidebars.bind(schemas.Menu),
     schemas.Route.GetRoutes.bind(schemas.Route),
-    function (defer) {
-        dataModel.Static.load()
-            .then(
-                function() {
-                    defer.resolve();
-                },
-                function(err) {
-                    defer.reject(err);
-                }
-            );
-    }
+    function () { return dataModel.Static.load(); }
 ];
 
 router.post('/login', function (req, res) {
