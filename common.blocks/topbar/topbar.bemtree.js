@@ -31,10 +31,17 @@ block('topbar')(
     }),
     elem('left')(
         content()(function () {
-            var result = [];
-            this.ctx.content.map(function (item) {
-                result.push({ block : 'link', url : item.url, content : item.content, target : '_blank' });
-            });
+            var result = [],
+                add = function (item) {
+                    result.push({
+                        block : 'link',
+                        url : item.url,
+                        content : item.content,
+                        title : item.title || '',
+                        target : '_blank'
+                    });
+                };
+            Array.isArray(this.ctx.content)? this.ctx.content.map(add): add(this.ctx.content);
             return applyCtx(result);
         })
     ),

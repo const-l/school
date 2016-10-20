@@ -23,15 +23,19 @@ var isAuthUser = function (req, res, next) {
 var methods = [
     schemas.Menu.GetMenus.bind(schemas.Menu),
     schemas.Menu.GetSidebars.bind(schemas.Menu),
-    schemas.Route.GetRoutes.bind(schemas.Route)
-];
-
-router.all('*', methods.map(function(item) {
-    return function(req, res, next) {
-        try { item(function() { next(); }); }
-        catch (e) { res.sendStatus(500); }
+    schemas.Route.GetRoutes.bind(schemas.Route),
+    function (defer) {
+        dataModel.Static.load()
+            .then(
+                function() {
+                    defer.resolve();
+                },
+                function(err) {
+                    defer.reject(err);
+                }
+            );
     }
-}));
+];
 
 router.post('/login', function (req, res) {
     utils.async(function (defer) {
@@ -58,20 +62,29 @@ router.post('/logout', function (req, res) {
 router.all('*/upload', isAuthUser, isAdminUser);
 router.use(upload);
 
+router.get('/clear_cache', isAuthUser, isAdminUser, function (req, res) {
+    cache.flushAll();
+    res.redirect('/');
+});
+
 router.route('*')
+    .all(function (req, res, next) {
+        utils.chain(methods, this).then(
+            function() { next(); },
+            function(err) { res.sendStatus(500); }
+        );
+    })
     .get(function (req, res, next) {
             var id = req.query.id,
-                mode = !!req.query.mode,
-                config = { path : req.path, page : req.query.page };
+                mode = !!req.query.mode;
             if (id || mode) return next();
-            dataModel.Content.getByPath(config).then(
+            dataModel.Content.getByPath({ path : req.path, page : req.query.page }).then(
                 function (result) {
                     if (!result || !result.last) {
                         return res.sendStatus(500);
                     }
                     result = result.last();
-                    var carousel = result.carousel,
-                        doc = result.doc,
+                    var doc = result.doc,
                         dir = result.dir;
                     if (doc) {
                         var main = doc.Pages.map(function (item) {
@@ -87,7 +100,7 @@ router.route('*')
                         render(req, res, {
                             Menus : cache.get('Menu'),
                             Sidebars : cache.get('Sidebar'),
-                            carousel : carousel,
+                            carousel : (cache.get(config.static.STATIC_DATA_KEY) || {}).carousel,
                             main : main
                         });
                     }

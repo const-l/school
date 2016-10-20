@@ -3,7 +3,8 @@ block('header')(
         var data = this.data,
             result = [
             {
-                block : 'topbar'
+                block : 'topbar',
+                left : (data.static || {}).topbar || []
             },
             {
                 block : 'info'
@@ -23,7 +24,7 @@ block('header')(
                             elem: 'item',
                             content: {
                                 elem: 'img',
-                                url: data.settings.baseUrl + 'img/carousel/' + item
+                                url: data.settings.baseUrl + item
                             }
                         };
                         pos === 0 && (res.elemMods = { state: 'active' });

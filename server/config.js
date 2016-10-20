@@ -19,6 +19,10 @@ var config = {
     settings: {},
     bem: {
         bundles: ['index']
+    },
+    static : {
+        STATIC_DATA_FILE : path.join('server', 'static', 'data.json'),
+        STATIC_DATA_KEY : 'static_' + Date.now() + '_data'
     }
 };
 

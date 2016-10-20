@@ -36,7 +36,8 @@ function render(req, res, data, context) {
         data: Object.assign({}, {
             url: req._parsedUrl,
             user: user,
-            settings: config.settings
+            settings: config.settings,
+            static : cache.get(config.static.STATIC_DATA_KEY)
         }, data)
     };
 

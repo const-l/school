@@ -11,6 +11,7 @@ public/img/carousel/
 public/uploads/
 common.blocks/jquery/__config/
 public/jquery/
+server/static/
 
 # bem
 .enb/tmp/
