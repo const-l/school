@@ -63,6 +63,10 @@ module.exports = exports = function utils(config) {
             return defer.promise();
         }
 
+        /**
+         * Делаем копию массива, чтобы не удалять элементы из даного
+         */
+        iterable = iterable.map(function(item) { return item; });
         (function wrapper() {
             //TODO: произвести замеры, может есть смысл использовать .reverse()+.pop()
             _async(iterable.shift(), ctx, res).then(

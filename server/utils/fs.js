@@ -65,5 +65,32 @@ module.exports = {
                 }
             });
         });
+    },
+    /**
+     * Читает файл, если он существует
+     * @param {string} path - путь
+     * @param {object} [opt={}]
+     * @param {string} [opt.encoding='utf-8']
+     * @returns {Promise}
+     * @throws {'is not a file'} - по задонному пути НЕ файл
+     * @throws {Error} - внутренняя ошибка из {@link fs}
+     */
+    readFile : function (path, opt) {
+        opt = opt || { encoding : 'utf-8' };
+        var self = this;
+        return utils.async(function (defer) {
+            self.mkdir(Path.join.apply(Path, path.split(Path.sep).slice(0, -1))).then(
+                function() {
+                    fs.stat(path, function (err, stat) {
+                        if (err) return err.code !== "ENOENT"? defer.reject(err): defer.resolve(JSON.stringify({}));
+                        if (!stat.isFile()) return defer.reject(new Error(path + ' - is not a file'));
+                        fs.readFile(path, opt, function (err, data) {
+                            err? defer.reject(err): defer.resolve(data);
+                        });
+                    });
+                },
+                function(err) { defer.reject(err); }
+            );
+        });
     }
 };
