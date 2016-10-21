@@ -39,6 +39,8 @@
   },
   "scripts": {
     "start": "node production/production.js",
+    "clean": "rm -rf desktop.bundles/index/index.min.js desktop.bundles/index/index.min.css .enb/tmp && enb make clean",
+    "build": "NODE_ENV=production enb make",
     "postinstall": "npm run deps",
     "deps": "bower install",
     "postinstall": "npm run deps"
