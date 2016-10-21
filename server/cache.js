@@ -12,6 +12,8 @@ const
     EMPTY_DATA          = { code: 0x00020, message: 'Data can\'t be empty. For clear by key use \'flush\' function' },
     UNKNOWN_ERROR       = { code: 0x99999, message: 'Unknown error' };
 
+(function(global) {
+
 var _cache = {};
 /**
  * Натройки по умолчанию для кэша
@@ -29,7 +31,7 @@ if (!Object.assign) {
         enumerable: false,
         configurable: true,
         writable: true,
-        value: function(target, firstSource) {
+        value: function (target, firstSource) {
             'use strict';
             if (target === undefined || target === null) {
                 throw new TypeError('Cannot convert first argument to object');
@@ -78,12 +80,15 @@ function CacheError(err) {
  * @param {boolean} [stop=true]           - останавливать ли перебор, если функция вернула true
  */
 function forEach(arr, func, scope, stop) {
-    func  = func || function() {};
+    func = func || function () {
+        };
     scope = scope || this;
     stop = !(stop === false);
     if (Array.isArray(arr)) {
         try {
-            arr.forEach(function () { if (func.apply(scope, arguments) && stop) throw STOP_ITERATION; });
+            arr.forEach(function () {
+                if (func.apply(scope, arguments) && stop) throw STOP_ITERATION;
+            });
         }
         catch (e) {
             if (e !== STOP_ITERATION) throw e;
@@ -144,9 +149,11 @@ function Storage(config) {
             opt = opt || this._defaultOptions;
             if (!keyObj) {
                 if (data === undefined) throw new CacheError(EMPTY_DATA);
-                _cache[key] === undefined || opt.overwrite? _cache[key] = data: result = false;
+                _cache[key] === undefined || opt.overwrite ? _cache[key] = data : result = false;
             }
-            else forEach(key, function(item, k) { result = result && this.set(k, item, opt); }, this);
+            else forEach(key, function (item, k) {
+                result = result && this.set(k, item, opt);
+            }, this);
             return result;
         },
         /**
@@ -166,11 +173,13 @@ function Storage(config) {
          * @throws {EMPTY_KEY}          - пустой ключ
          * @throws {WRONG_GET_KEY_TYPE} - ключ не может быть объектом
          */
-        get: function(key) {
+        get: function (key) {
             if (key === undefined) throw new CacheError(EMPTY_KEY);
             if (isObject(key)) throw new CacheError(WRONG_GET_KEY_TYPE);
             var result = {};
-            Array.isArray(key)? forEach(key, function(item) { result[item] = this.get(item) }, this): result = _cache[key];
+            Array.isArray(key) ? forEach(key, function (item) {
+                result[item] = this.get(item)
+            }, this) : result = _cache[key];
             return result;
         },
         /**
@@ -184,8 +193,10 @@ function Storage(config) {
             if (key === undefined) throw new CacheError(EMPTY_KEY);
             if (isObject(key)) throw new CacheError(WRONG_GET_KEY_TYPE);
             var result = {};
-            Array.isArray(key)?
-                forEach(key, function(item) { result[item] = this.exists(item); }, this):
+            Array.isArray(key) ?
+                forEach(key, function (item) {
+                    result[item] = this.exists(item);
+                }, this) :
                 (result = _cache.hasOwnProperty(key));
             return result;
         },
@@ -198,7 +209,7 @@ function Storage(config) {
          */
         find: function (key) {
             if (key === undefined) throw new CacheError(EMPTY_KEY);
-            key = (typeof key === 'string' || key instanceof String)? new RegExp(key): key;
+            key = (typeof key === 'string' || key instanceof String) ? new RegExp(key) : key;
             if (!(key instanceof RegExp)) throw new CacheError(WRONG_SEARCH_KEY);
             var result = [];
             forEach(_cache, function (item, current) {
@@ -217,16 +228,28 @@ function Storage(config) {
             if (key === undefined) throw new CacheError(EMPTY_KEY);
             if (isObject(key)) throw new CacheError(WRONG_GET_KEY_TYPE);
             var result = {};
-            Array.isArray(key)? forEach(key, function(item) { result[item] = this.flush(item) }, this): result = delete _cache[key];
+            Array.isArray(key) ? forEach(key, function (item) {
+                result[item] = this.flush(item)
+            }, this) : result = delete _cache[key];
             return result;
         },
         /**
          * Полная очистка кэша
          */
-        flushAll: function () { _cache = {}; }
+        flushAll: function () {
+            _cache = {};
+        }
     };
 
     return new Cache();
 }
 
-module.exports = Storage;
+typeof module === 'object' && typeof module.exports === 'object'?
+    (module.exports = Storage):
+    typeof modules === 'object' && isFunction(modules.define)?
+        modules.define('cache', function(provide) { provide(Storage); }):
+        typeof define === 'function'?
+            define(function(require, exports, module) { module.exports = Storage; }):
+            (global.cache = Storage);
+
+})(typeof window !== 'undefined'? window : global);
