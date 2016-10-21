@@ -12,6 +12,7 @@ public/uploads/
 common.blocks/jquery/__config/
 public/jquery/
 server/static/
+server/log/*.log
 
 # bem
 .enb/tmp/

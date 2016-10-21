@@ -14,7 +14,6 @@ require('../server/utils')()
             require('../server/app');
         },
         function (err) {
-            console.error('Start error', err.stack);
-            console.trace('server stack');
+            require('../server/log').error('Start error', err.stack);
         }
     );

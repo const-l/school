@@ -6,6 +6,7 @@ var path = require('path'),
     useCache = !isDev,
 
     cache = require('./cache')(),
+    log = require('./log'),
     bundles = {};
 
 config.bem.bundles.forEach(function (bundle) {
@@ -45,8 +46,7 @@ function render(req, res, data, context) {
         var bemjson = bundles[data.bundle].BEMTREE.apply(bemtreeCtx);
     }
     catch (err) {
-        console.error('BEMTREE error', err.stack);
-        console.trace('server stack');
+        log.error('BEMTREE error', err.stack);
         return res.sendStatus(500);
     }
 
@@ -56,8 +56,7 @@ function render(req, res, data, context) {
     try {
         var html = bundles[data.bundle].BEMHTML.apply(bemjson);
     } catch (err) {
-        console.error('BEMHTML error', err.stack);
-        console.trace('server stack');
+        log.error('BEMHTML error', err.stack);
         return res.sendStatus(500);
     }
 

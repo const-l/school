@@ -6,6 +6,7 @@ var express = require('express'),
     utils = require('./utils')({}),
     vow = require('vow'),
     cache = require('./cache')(),
+    log = require('./log'),
     dataModel = require('./data'),
     schemas = require('../db/schemas'),
     upload = require('./utils/uploadRouter');
@@ -42,7 +43,8 @@ router.post('/login', function (req, res) {
                 data.success = true;
             }
             res.send(JSON.stringify(data));
-        }
+        },
+        function(err) { log.error(err); }
     );
 });
 router.post('/logout', function (req, res) {
@@ -61,7 +63,10 @@ router.route('*')
     .all(function (req, res, next) {
         utils.chain(methods, this).then(
             function() { next(); },
-            function(err) { res.sendStatus(500); }
+            function(err) {
+                log.error(err);
+                res.sendStatus(500);
+            }
         );
     })
     .get(function (req, res, next) {
@@ -153,7 +158,8 @@ router.route('*')
                 cache.flush(cache.find(path + '.*'));
                 res.redirect(path);
             },
-            function () {
+            function (err) {
+                log.error(err);
                 res.sendStatus(500);
             }
         );
@@ -168,7 +174,8 @@ router.route('*')
                 cache.flush(cache.find(path + '.*'));
                 res.sendStatus(200);
             },
-            function () {
+            function (err) {
+                log.error(err);
                 res.sendStatus(500);
             }
         );
@@ -185,7 +192,10 @@ router.all('*', function (req, res) {
 
 router.use(function (err, req, res, next) {
     if (err.forbidden) return forbiddenSend(req, res);
-    else next();
+    else {
+        log.error(err);
+        next();
+    }
 });
 
 module.exports = router;

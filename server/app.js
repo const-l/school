@@ -12,6 +12,7 @@ var path = require('path'),
     utils = require('./utils')({}),
     cache = require('./cache')(),
     router = require('./router'),
+    log = require('./log'),
 
     staticFolder = config.public;
 
@@ -32,8 +33,8 @@ app
     .use(slashes())
     .use(router)
     .listen(app.get('handle'), function() {
-        console.info('start worker: ' + process.env.WORKER_ID);
-        console.info('NODE_ENV: ' + process.env.NODE_ENV);
-        console.info('start PID: ' + process.pid);
-        console.info('Express server listening on port ' + app.get('handle'));
+        log.info('start worker: ' + process.env.WORKER_ID);
+        log.info('NODE_ENV: ' + process.env.NODE_ENV);
+        log.info('start PID: ' + process.pid);
+        log.info('Express server listening on port ' + app.get('handle'));
     });
