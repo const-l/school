@@ -3,8 +3,7 @@ block('header')(
         var data = this.data,
             result = [
             {
-                block : 'topbar',
-                left : (data.static || {}).topbar || []
+                block : 'topbar'
             },
             {
                 block : 'info'

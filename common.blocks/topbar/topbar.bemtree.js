@@ -3,10 +3,11 @@ block('topbar')(
         return { block: 'wrapper', mods : { color : 'green' }, content: this.ctx };
     }),
     content()(function () {
-        var contentLeft = this.ctx.left || [],
+        var data = this.data,
+            contentLeft = (data.static || {}).topbar || [],
             contentRight = this.ctx.right || [];
         !Array.isArray(contentRight) && (contentRight = [contentRight]);
-        this.data.user?
+        data.user?
             contentRight.push({ elem: 'logout' }):
             contentRight.push(
                 { elem : 'login' },
@@ -18,7 +19,7 @@ block('topbar')(
                     },
                     content: { block : 'login' }
                 });
-        return applyCtx([
+        return [
             {
                 elem : 'left',
                 content : contentLeft
@@ -27,7 +28,7 @@ block('topbar')(
                 elem : 'right',
                 content : contentRight
             }
-        ]);
+        ];
     }),
     elem('left')(
         content()(function () {
@@ -42,7 +43,7 @@ block('topbar')(
                     });
                 };
             Array.isArray(this.ctx.content)? this.ctx.content.map(add): add(this.ctx.content);
-            return applyCtx(result);
+            return result;
         })
     ),
     elem('login')(

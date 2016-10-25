@@ -17,6 +17,6 @@ block('sidebar')(
                 }
                 return result;
             };
-        return sidebar.map(createItem)
+        return sidebar.map(createItem);
     })
 );

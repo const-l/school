@@ -7,18 +7,18 @@ block('info')(
     }),
     elem('logo')(
         content()(function () {
+            var _static = this.data.static || {};
             return applyCtx({
                 block : 'link',
                 url : '/',
-                content : 'МБОУ "Пшеничненская СОШ"'
+                content : (_static.info || {}).logo || 'Название'
             });
         })
     ),
     elem('quick')(
         content()(function () {
-            return applyCtx([
-                { block : 'label', strong : 'Телефон:', content : '+7 (36550) 2-93-27' }
-            ]);
+            var _static = this.data.static || {};
+            return (_static.info || {}).quick || '';
         })
     )
 );
