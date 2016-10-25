@@ -101,7 +101,7 @@ var content = {
                 schemas.Page.remove({ _id : id }, function (err) {
                     if (err) return defer.reject(err);
                     if (!path) defer.resolve();
-                    else schemas.Route.update({ Path : path }, { pull : { Pages : id }}, function (err) {
+                    else schemas.Route.update({ Path : path }, { $pull : { Pages : id }}, function (err) {
                         err? defer.reject(err): defer.resolve();
                     });
                 });
